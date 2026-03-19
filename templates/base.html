@@ -1,1 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Videy — Share Videos Instantly{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: #222222;
+      --accent: #e8ff47;
+      --accent2: #ff6b35;
+      --text: #f0f0f0;
+      --muted: #666;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius: 10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,10,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; gap: 1.5rem;
+      height: 60px;
+    }
+    .nav-logo {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-search {
+      flex: 1; max-width: 400px;
+      display: flex; align-items: center;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .nav-search input {
+      flex: 1; padding: 0.5rem 1rem;
+      background: none; border: none; outline: none;
+      color: var(--text); font-family: var(--font-body);
+      font-size: 0.9rem;
+    }
+    .nav-search button {
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      border: none; cursor: pointer;
+      color: #000; font-weight: 600;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      transition: opacity 0.2s;
+    }
+    .nav-search button:hover { opacity: 0.85; }
+    .nav-spacer { flex: 1; }
+    .nav-link {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.9rem; transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
+
+    /* FLASH MESSAGES */
+    .flash-container {
+      max-width: 1200px; margin: 1rem auto; padding: 0 2rem;
+    }
+    .flash {
+      padding: 0.75rem 1rem; border-radius: var(--radius);
+      font-size: 0.9rem; margin-bottom: 0.5rem;
+    }
+    .flash.success { background: #1a3a1a; color: #7fff7f; border: 1px solid #2a5a2a; }
+    .flash.error   { background: #3a1a1a; color: #ff8080; border: 1px solid #5a2a2a; }
+
+    /* CONTAINER */
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+    /* VIDEO GRID */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .video-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      text-decoration: none; color: inherit;
+      transition: transform 0.2s, border-color 0.2s;
+      display: block;
+    }
+    .video-card:hover {
+      transform: translateY(-3px);
+      border-color: #333;
+    }
+    .video-thumb {
+      position: relative;
+      aspect-ratio: 16/9;
+      background: var(--surface2);
+      overflow: hidden;
+    }
+    .video-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .video-card:hover .video-thumb img { transform: scale(1.03); }
+    .video-duration {
+      position: absolute; bottom: 6px; right: 6px;
+      background: rgba(0,0,0,0.8);
+      color: #fff; font-size: 0.75rem; font-weight: 500;
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .play-icon {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .video-card:hover .play-icon { opacity: 1; }
+    .play-icon svg { width: 48px; height: 48px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
+    .video-info { padding: 0.875rem; }
+    .video-title {
+      font-family: var(--font-head);
+      font-weight: 600; font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .video-meta { font-size: 0.8rem; color: var(--muted); }
+
+    /* FOOTER */
+    footer {
+      text-align: center; padding: 2rem;
+      color: var(--muted); font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+    footer a { color: var(--muted); }
+
+    /* BTN */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 1.25rem; border-radius: 8px;
+      font-family: var(--font-body); font-weight: 500;
+      font-size: 0.9rem; cursor: pointer;
+      text-decoration: none; border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-ghost:hover { border-color: #444; background: var(--surface2); }
+    .btn-danger { background: #3a1a1a; color: #ff6b6b; border: 1px solid #5a2a2a; }
+    .btn-danger:hover { background: #4a2020; }
+
+    /* EMPTY */
+    .empty-state {
+      text-align: center; padding: 5rem 2rem; color: var(--muted);
+    }
+    .empty-state h2 {
+      font-family: var(--font-head); font-size: 1.5rem;
+      margin-bottom: 0.5rem; color: var(--text);
+    }
+
+    /* NO THUMB PLACEHOLDER */
+    .thumb-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a1a1a, #222);
+      color: var(--muted); font-size: 2rem;
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <a href="{{ url_for('index') }}" class="nav-logo">VID<span>EY</span></a>
+    <form class="nav-search" action="{{ url_for('search') }}" method="get">
+      <input type="text" name="q" placeholder="Cari video..." value="{{ request.args.get('q', '') }}" />
+      <button type="submit">Cari</button>
+    </form>
+    <div class="nav-spacer"></div>
+    {% if session.get('logged_in') %}
+      <a href="{{ url_for('admin_dashboard') }}" class="nav-link">Admin</a>
+      <a href="{{ url_for('admin_logout') }}" class="nav-link">Logout</a>
+    {% else %}
+      <a href="{{ url_for('admin_login') }}" class="nav-link">Login</a>
+    {% endif %}
+  </nav>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  <footer>
+    <p>&copy; {{ 2025 }} VIDEY — Made with ♥ &nbsp;|&nbsp; <a href="{{ url_for('admin_login') }}">Admin</a></p>
+  </footer>
+</body>
+</html>

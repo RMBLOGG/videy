@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}VIDEY — Share Videos Instantly{% endblock %}
+
+{% block head %}
+<style>
+  .hero {
+    padding: 4rem 2rem 2rem;
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: flex-end;
+    gap: 2rem; justify-content: space-between;
+  }
+  .hero-title {
+    font-family: var(--font-head);
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 800;
+    line-height: 1; letter-spacing: -0.04em;
+    color: var(--text);
+  }
+  .hero-title .accent { color: var(--accent); }
+  .hero-sub { color: var(--muted); font-size: 1rem; margin-top: 0.5rem; }
+
+  .section-label {
+    font-family: var(--font-head); font-size: 0.7rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-label::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--border);
+  }
+  .videos-section { padding-bottom: 3rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div>
+    <h1 class="hero-title">Share<br><span class="accent">Video.</span></h1>
+    <p class="hero-sub">Platform streaming video sederhana & cepat.</p>
+  </div>
+  {% if session.get('logged_in') %}
+  <a href="{{ url_for('admin_upload') }}" class="btn btn-primary">+ Upload Video</a>
+  {% endif %}
+</div>
+
+<div class="container videos-section">
+  <div class="section-label">Video Terbaru</div>
+  {% if videos %}
+    <div class="video-grid">
+      {% for v in videos %}
+      <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
+        <div class="video-thumb">
+          {% if v.thumbnail_url %}
+            <img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy" />
+          {% else %}
+            <div class="thumb-placeholder">▶</div>
+          {% endif %}
+          <div class="play-icon">
+            <svg viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="32" fill="rgba(255,255,255,0.15)"/>
+              <polygon points="26,20 26,44 46,32" fill="white"/>
+            </svg>
+          </div>
+          {% if v.duration %}
+            <span class="video-duration">
+              {% set m = (v.duration // 60)|int %}
+              {% set s = (v.duration % 60)|int %}
+              {{ '%d:%02d'|format(m, s) }}
+            </span>
+          {% endif %}
+        </div>
+        <div class="video-info">
+          <div class="video-title">{{ v.title }}</div>
+          <div class="video-meta">{{ v.views or 0 }} views</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <h2>Belum ada video</h2>
+      <p>{% if session.get('logged_in') %}<a href="{{ url_for('admin_upload') }}" class="btn btn-primary" style="margin-top:1rem">Upload Video Pertama</a>{% else %}Nantikan konten baru segera.{% endif %}</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
