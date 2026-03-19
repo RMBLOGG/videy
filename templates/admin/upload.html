@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block title %}Upload Video — VIDEY{% endblock %}
+
+{% block head %}
+<style>
+  .upload-wrap {
+    max-width: 700px; margin: 0 auto; padding: 2rem;
+  }
+  .upload-wrap h1 {
+    font-family: var(--font-head); font-size: 1.8rem;
+    font-weight: 800; letter-spacing: -0.03em;
+    margin-bottom: 2rem;
+  }
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 2rem;
+  }
+  .form-group { margin-bottom: 1.5rem; }
+  .form-group label {
+    display: block; font-size: 0.75rem;
+    color: var(--muted); margin-bottom: 0.5rem;
+    font-family: var(--font-head); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .form-group input[type="text"],
+  .form-group textarea {
+    width: 100%; padding: 0.7rem 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px; outline: none;
+    color: var(--text); font-family: var(--font-body);
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+  .form-group input[type="text"]:focus,
+  .form-group textarea:focus { border-color: var(--accent); }
+  .form-group textarea { min-height: 100px; }
+
+  /* File drop zones */
+  .file-drop {
+    border: 2px dashed var(--border);
+    border-radius: 10px; padding: 2rem;
+    text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .file-drop:hover, .file-drop.dragover {
+    border-color: var(--accent);
+    background: rgba(232,255,71,0.04);
+  }
+  .file-drop input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+  .file-drop .drop-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .file-drop p { color: var(--muted); font-size: 0.9rem; }
+  .file-drop .file-name {
+    margin-top: 0.5rem; color: var(--accent);
+    font-size: 0.85rem; font-weight: 500;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    display: none; margin-top: 1.5rem;
+  }
+  .progress-wrap.show { display: block; }
+  .progress-bar-bg {
+    background: var(--surface2); border-radius: 4px;
+    height: 6px; overflow: hidden; margin-top: 0.5rem;
+  }
+  .progress-bar-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 4px; width: 0%;
+    transition: width 0.3s;
+  }
+  .progress-label { font-size: 0.8rem; color: var(--muted); }
+
+  .form-actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+  .submit-btn {
+    background: var(--accent); color: #000;
+    border: none; border-radius: 8px;
+    padding: 0.75rem 2rem;
+    font-family: var(--font-head); font-weight: 700;
+    font-size: 1rem; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .submit-btn:hover { opacity: 0.85; }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-wrap">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost" style="padding:0.4rem 0.75rem">← Kembali</a>
+    <h1 style="margin:0">Upload Video</h1>
+  </div>
+
+  <div class="form-card">
+    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+      <div class="form-group">
+        <label>Judul Video *</label>
+        <input type="text" name="title" required placeholder="Masukkan judul video..." />
+      </div>
+
+      <div class="form-group">
+        <label>Deskripsi</label>
+        <textarea name="description" placeholder="Deskripsi video (opsional)..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>File Video * (MP4, WebM, MOV)</label>
+        <div class="file-drop" id="videoDrop">
+          <input type="file" name="video" id="videoInput" accept="video/*" required />
+          <div class="drop-icon">🎬</div>
+          <p>Klik atau seret video ke sini</p>
+          <div class="file-name" id="videoName"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Thumbnail (opsional — otomatis jika kosong)</label>
+        <div class="file-drop" id="thumbDrop">
+          <input type="file" name="thumbnail" id="thumbInput" accept="image/*" />
+          <div class="drop-icon">🖼️</div>
+          <p>Klik atau seret gambar thumbnail</p>
+          <div class="file-name" id="thumbName"></div>
+        </div>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label" id="progressLabel">Mengupload...</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="submit-btn" id="submitBtn">Upload Video →</button>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">Batal</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // File name display
+  document.getElementById('videoInput').addEventListener('change', function() {
+    const name = this.files[0]?.name || '';
+    document.getElementById('videoName').textContent = name;
+  });
+  document.getElementById('thumbInput').addEventListener('change', function() {
+    const name = this.files[0]?.name || '';
+    document.getElementById('thumbName').textContent = name;
+  });
+
+  // Drag & drop highlight
+  ['videoDrop','thumbDrop'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+    el.addEventListener('drop', () => el.classList.remove('dragover'));
+  });
+
+  // Progress simulation during upload
+  document.getElementById('uploadForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    const pw = document.getElementById('progressWrap');
+    const fill = document.getElementById('progressFill');
+    const label = document.getElementById('progressLabel');
+
+    btn.disabled = true;
+    btn.textContent = 'Mengupload...';
+    pw.classList.add('show');
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress = Math.min(progress + Math.random() * 8, 90);
+      fill.style.width = progress + '%';
+      label.textContent = `Mengupload... ${Math.round(progress)}%`;
+    }, 400);
+
+    // Store interval ID to clear on page unload
+    window._uploadInterval = interval;
+  });
+</script>
+{% endblock %}
