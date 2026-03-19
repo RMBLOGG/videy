@@ -9,21 +9,28 @@ from datetime import datetime
 import uuid
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-change-in-production")
+app.secret_key = os.environ.get("SECRET_KEY", "default-secret-key")
 
-# Cloudinary config
+# Cloudinary config — hardcoded
 cloudinary.config(
-    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.environ.get("CLOUDINARY_API_KEY"),
-    api_secret=os.environ.get("CLOUDINARY_API_SECRET")
+    cloud_name="dzfkklsza",
+    api_key="588474134734416",
+    api_secret="9c12YJe5rZSYSg7zROQuvmVZ7mg"
 )
 
-# Supabase config
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+# Supabase config — hardcoded, lazy init
+_SUPABASE_URL = "https://mafnnqttvkdgqqxczqyt.supabase.co"
+_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y"
 
-# Admin credentials (store securely in env vars)
+_supabase_client = None
+
+def get_supabase() -> Client:
+    global _supabase_client
+    if _supabase_client is None:
+        _supabase_client = create_client(_SUPABASE_URL, _SUPABASE_KEY)
+    return _supabase_client
+
+# Admin credentials — set via Vercel env vars
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
@@ -40,7 +47,7 @@ def login_required(f):
 @app.route('/')
 def index():
     try:
-        response = supabase.table('videos').select('*').order('created_at', desc=True).execute()
+        response = get_supabase().table('videos').select('*').order('created_at', desc=True).execute()
         videos = response.data
     except Exception as e:
         videos = []
@@ -49,12 +56,11 @@ def index():
 @app.route('/v/<video_id>')
 def watch(video_id):
     try:
-        response = supabase.table('videos').select('*').eq('id', video_id).single().execute()
+        response = get_supabase().table('videos').select('*').eq('id', video_id).single().execute()
         video = response.data
         if not video:
             return render_template('404.html'), 404
-        # Get related videos
-        related = supabase.table('videos').select('*').neq('id', video_id).limit(6).execute()
+        related = get_supabase().table('videos').select('*').neq('id', video_id).limit(6).execute()
         return render_template('watch.html', video=video, related=related.data)
     except Exception as e:
         return render_template('404.html'), 404
@@ -65,7 +71,7 @@ def search():
     videos = []
     if query:
         try:
-            response = supabase.table('videos').select('*').ilike('title', f'%{query}%').execute()
+            response = get_supabase().table('videos').select('*').ilike('title', f'%{query}%').execute()
             videos = response.data
         except Exception as e:
             videos = []
@@ -77,7 +83,6 @@ def search():
 def admin_login():
     if session.get('logged_in'):
         return redirect(url_for('admin_dashboard'))
-    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -87,7 +92,6 @@ def admin_login():
             return redirect(url_for('admin_dashboard'))
         else:
             flash('Username atau password salah.', 'error')
-    
     return render_template('admin/login.html')
 
 @app.route('/admin/logout')
@@ -99,7 +103,7 @@ def admin_logout():
 @login_required
 def admin_dashboard():
     try:
-        response = supabase.table('videos').select('*').order('created_at', desc=True).execute()
+        response = get_supabase().table('videos').select('*').order('created_at', desc=True).execute()
         videos = response.data
         total = len(videos)
     except:
@@ -121,7 +125,6 @@ def admin_upload():
             return redirect(url_for('admin_upload'))
 
         try:
-            # Upload video ke Cloudinary
             video_upload = cloudinary.uploader.upload(
                 video_file,
                 resource_type='video',
@@ -132,7 +135,6 @@ def admin_upload():
             video_public_id = video_upload['public_id']
             duration = video_upload.get('duration', 0)
 
-            # Upload thumbnail (opsional)
             thumbnail_url = None
             if thumbnail_file and thumbnail_file.filename:
                 thumb_upload = cloudinary.uploader.upload(
@@ -141,16 +143,14 @@ def admin_upload():
                 )
                 thumbnail_url = thumb_upload['secure_url']
             else:
-                # Auto-generate thumbnail dari video
                 thumbnail_url = cloudinary.CloudinaryVideo(video_public_id).build_url(
                     resource_type='video',
                     format='jpg',
                     transformation=[{'start_offset': '0'}]
                 )
 
-            # Simpan ke Supabase
             video_id = str(uuid.uuid4())[:8]
-            supabase.table('videos').insert({
+            get_supabase().table('videos').insert({
                 'id': video_id,
                 'title': title,
                 'description': description,
@@ -175,28 +175,23 @@ def admin_upload():
 @login_required
 def admin_delete(video_id):
     try:
-        # Ambil data video
-        response = supabase.table('videos').select('*').eq('id', video_id).single().execute()
+        response = get_supabase().table('videos').select('*').eq('id', video_id).single().execute()
         video = response.data
-
         if video:
-            # Hapus dari Cloudinary
             cloudinary.uploader.destroy(video['cloudinary_public_id'], resource_type='video')
-            # Hapus dari Supabase
-            supabase.table('videos').delete().eq('id', video_id).execute()
+            get_supabase().table('videos').delete().eq('id', video_id).execute()
             flash('Video berhasil dihapus.', 'success')
         else:
             flash('Video tidak ditemukan.', 'error')
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
-
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/edit/<video_id>', methods=['GET', 'POST'])
 @login_required
 def admin_edit(video_id):
     try:
-        response = supabase.table('videos').select('*').eq('id', video_id).single().execute()
+        response = get_supabase().table('videos').select('*').eq('id', video_id).single().execute()
         video = response.data
     except:
         flash('Video tidak ditemukan.', 'error')
@@ -206,7 +201,7 @@ def admin_edit(video_id):
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         try:
-            supabase.table('videos').update({
+            get_supabase().table('videos').update({
                 'title': title,
                 'description': description
             }).eq('id', video_id).execute()
@@ -217,13 +212,12 @@ def admin_edit(video_id):
 
     return render_template('admin/edit.html', video=video)
 
-# Increment views
 @app.route('/api/view/<video_id>', methods=['POST'])
 def increment_view(video_id):
     try:
-        response = supabase.table('videos').select('views').eq('id', video_id).single().execute()
+        response = get_supabase().table('videos').select('views').eq('id', video_id).single().execute()
         current_views = response.data['views'] or 0
-        supabase.table('videos').update({'views': current_views + 1}).eq('id', video_id).execute()
+        get_supabase().table('videos').update({'views': current_views + 1}).eq('id', video_id).execute()
         return jsonify({'success': True})
     except:
         return jsonify({'success': False}), 400
