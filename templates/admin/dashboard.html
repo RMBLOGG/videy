@@ -41,7 +41,7 @@
     <div class="table-scroll">
       <table>
         <thead>
-          <tr><th>Video</th><th>Views</th><th>Tanggal</th><th>Aksi</th></tr>
+          <tr><th>Video</th><th>Uploader</th><th>Views</th><th>Tanggal</th><th>Aksi</th></tr>
         </thead>
         <tbody>
           {% for v in videos %}
@@ -55,8 +55,9 @@
                 <a href="{{ url_for('watch', video_id=v.id) }}" class="title-text" style="color:var(--text);text-decoration:none" target="_blank">{{ v.title }}</a>
               </div>
             </td>
+            <td style="color:var(--muted2);font-size:.82rem">{{ v.uploader_name or 'Anonymous' }}</td>
             <td style="color:var(--muted2)">{{ v.views or 0 }}</td>
-            <td style="color:var(--muted2);font-family:var(--mono);font-size:.78rem">{{ v.created_at[:10] if v.created_at else '-' }}</td>
+            <td style="color:var(--muted2);font-family:var(--mono);font-size:.78rem">{{ format_wib(v.created_at) }}</td>
             <td>
               <div class="actions">
                 <a href="{{ url_for('admin_edit', video_id=v.id) }}" class="btn btn-ghost btn-sm">Edit</a>
