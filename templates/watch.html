@@ -2,71 +2,59 @@
 {% block title %}{{ video.title }} — VIDEY{% endblock %}
 {% block head %}
 <style>
-  .watch-wrap{max-width:1280px;margin:0 auto;padding:1.25rem;display:grid;grid-template-columns:1fr 300px;gap:1.5rem}
+  .watch-wrap{max-width:1280px;margin:0 auto;padding:1rem;display:grid;grid-template-columns:1fr 290px;gap:1.25rem}
   @media(max-width:860px){.watch-wrap{grid-template-columns:1fr}}
   .player-box{background:#000;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9}
   .player-box video{width:100%;height:100%;display:block}
-  .video-detail{margin-top:1rem}
-  .video-detail h1{font-size:clamp(1rem,3vw,1.45rem);font-weight:700;letter-spacing:-.025em;line-height:1.3;margin-bottom:.6rem}
+  .video-detail{margin-top:.875rem}
+  .video-detail h1{font-size:clamp(1rem,3vw,1.4rem);font-weight:700;letter-spacing:-.025em;line-height:1.3;margin-bottom:.5rem}
   .detail-meta{display:flex;align-items:center;gap:.625rem;flex-wrap:wrap;font-size:.8rem;color:var(--muted2);padding-bottom:.875rem;border-bottom:1px solid var(--border)}
   .badge-pill{background:var(--surface2);border:1px solid var(--border2);padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600}
-
-  /* Reactions */
-  .reactions{display:flex;gap:.5rem;margin-top:.875rem;flex-wrap:wrap;align-items:center}
-  .react-btn{display:flex;align-items:center;gap:.35rem;padding:.45rem .9rem;border-radius:99px;border:1px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--font);font-size:.85rem;font-weight:600;transition:all .2s}
+  .reactions{display:flex;gap:.4rem;margin-top:.875rem;flex-wrap:wrap;align-items:center}
+  .react-btn{display:flex;align-items:center;gap:.35rem;padding:.42rem .875rem;border-radius:99px;border:1px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--font);font-size:.82rem;font-weight:600;transition:all .2s}
   .react-btn:hover{border-color:var(--accent)}
   .react-btn.liked{background:rgba(108,99,255,.15);border-color:var(--accent);color:var(--accent2)}
   .react-btn.disliked{background:rgba(255,77,109,.12);border-color:var(--red);color:var(--red)}
-  .share-btns{display:flex;gap:.4rem;flex-wrap:wrap;margin-left:auto}
-  .share-btn{padding:.4rem .8rem;border-radius:99px;font-size:.75rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);background:var(--surface);cursor:pointer;font-family:var(--font);transition:all .2s}
+  .share-btns{display:flex;gap:.35rem;flex-wrap:wrap;margin-left:auto}
+  .share-btn{padding:.38rem .75rem;border-radius:99px;font-size:.72rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);background:var(--surface);cursor:pointer;font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:.3rem}
   .share-btn:hover{border-color:var(--accent2);color:var(--text)}
-
   .video-desc{margin-top:.875rem;font-size:.875rem;color:var(--muted2);line-height:1.7;background:var(--surface);border-radius:var(--r2);padding:.875rem 1rem}
   .admin-bar{display:flex;gap:.5rem;margin-top:.875rem;flex-wrap:wrap}
-
-  /* Embed box */
   .embed-box{margin-top:.875rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
   .embed-tabs{display:flex;border-bottom:1px solid var(--border)}
-  .embed-tab{padding:.6rem 1rem;font-size:.78rem;font-weight:600;cursor:pointer;color:var(--muted2);border:none;background:none;font-family:var(--font);transition:all .2s}
+  .embed-tab{padding:.55rem .875rem;font-size:.78rem;font-weight:600;cursor:pointer;color:var(--muted2);border:none;background:none;font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:.35rem}
   .embed-tab.active{color:var(--accent2);border-bottom:2px solid var(--accent)}
   .embed-content{padding:.875rem}
   .embed-row{display:flex;gap:.5rem}
-  .embed-row input,.embed-row textarea{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.45rem .75rem;font-size:.78rem;color:var(--text);outline:none;font-family:var(--mono);resize:none}
-  .copy-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:.45rem .875rem;cursor:pointer;font-size:.78rem;font-weight:600;font-family:var(--font);white-space:nowrap;transition:opacity .2s}
+  .embed-row input,.embed-row textarea{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.42rem .7rem;font-size:.78rem;color:var(--text);outline:none;font-family:var(--mono);resize:none}
+  .copy-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:.42rem .8rem;cursor:pointer;font-size:.78rem;font-weight:600;font-family:var(--font);white-space:nowrap;transition:opacity .2s}
   .copy-btn:hover{opacity:.85}
-
-  /* Comments */
-  .comments-section{margin-top:1.25rem}
-  .comments-section h3{font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
-  .comment-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-bottom:1rem}
-  .comment-inputs{display:flex;gap:.5rem;margin-bottom:.625rem;flex-wrap:wrap}
-  .comment-inputs input{flex:1;min-width:120px;padding:.55rem .875rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;outline:none;color:var(--text);font-family:var(--font);font-size:.875rem;transition:border-color .2s}
+  .comments-section{margin-top:1.1rem}
+  .comments-section h3{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.875rem;display:flex;align-items:center;gap:.4rem}
+  .comment-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.875rem;margin-bottom:1rem}
+  .comment-inputs input{width:100%;padding:.52rem .875rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;outline:none;color:var(--text);font-family:var(--font);font-size:.875rem;transition:border-color .2s;margin-bottom:.5rem}
   .comment-inputs input:focus{border-color:var(--accent)}
-  .comment-textarea{width:100%;padding:.55rem .875rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;outline:none;color:var(--text);font-family:var(--font);font-size:.875rem;resize:vertical;min-height:80px;transition:border-color .2s;margin-bottom:.625rem}
+  .comment-textarea{width:100%;padding:.52rem .875rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;outline:none;color:var(--text);font-family:var(--font);font-size:.875rem;resize:vertical;min-height:75px;transition:border-color .2s;margin-bottom:.5rem}
   .comment-textarea:focus{border-color:var(--accent)}
-  .comment-submit{background:var(--accent);color:#fff;border:none;border-radius:99px;padding:.5rem 1.25rem;font-family:var(--font);font-weight:600;font-size:.875rem;cursor:pointer;transition:opacity .2s}
+  .comment-submit{background:var(--accent);color:#fff;border:none;border-radius:99px;padding:.48rem 1.1rem;font-family:var(--font);font-weight:600;font-size:.875rem;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;gap:.4rem}
   .comment-submit:hover{opacity:.85}
-  .comment-item{padding:.75rem 0;border-bottom:1px solid var(--border);display:flex;gap:.75rem}
+  .comment-item{padding:.7rem 0;border-bottom:1px solid var(--border);display:flex;gap:.7rem}
   .comment-item:last-child{border-bottom:none}
-  .comment-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0}
-  .comment-body .cname{font-weight:600;font-size:.85rem}
-  .comment-body .ctime{font-size:.72rem;color:var(--muted);margin-left:.4rem}
-  .comment-body .ctext{font-size:.875rem;color:var(--muted2);margin-top:.2rem;line-height:1.5}
-
-  /* Sidebar */
+  .comment-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0}
+  .comment-body .cname{font-weight:600;font-size:.82rem}
+  .comment-body .ctime{font-size:.7rem;color:var(--muted);margin-left:.35rem}
+  .comment-body .ctext{font-size:.85rem;color:var(--muted2);margin-top:.2rem;line-height:1.5}
   .sidebar h3{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.875rem}
-  .related-list{display:flex;flex-direction:column;gap:.625rem}
-  .related-card{display:flex;gap:.75rem;text-decoration:none;color:inherit;padding:.5rem;border-radius:var(--r2);transition:background .2s}
+  .related-list{display:flex;flex-direction:column;gap:.5rem}
+  .related-card{display:flex;gap:.7rem;text-decoration:none;color:inherit;padding:.45rem;border-radius:var(--r2);transition:background .2s}
   .related-card:hover{background:var(--surface2)}
-  .related-thumb{width:110px;flex-shrink:0;aspect-ratio:16/9;background:var(--surface2);border-radius:6px;overflow:hidden}
+  .related-thumb{width:105px;flex-shrink:0;aspect-ratio:16/9;background:var(--surface2);border-radius:6px;overflow:hidden}
   .related-thumb img{width:100%;height:100%;object-fit:cover}
-  .related-title{font-weight:600;font-size:.82rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .related-meta{font-size:.72rem;color:var(--muted2);margin-top:.2rem}
-  @media(max-width:480px){.related-thumb{width:90px}}
-
-  /* Report modal */
+  .related-title{font-weight:600;font-size:.8rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .related-meta{font-size:.7rem;color:var(--muted2);margin-top:.2rem}
   .report-reasons{display:flex;flex-direction:column;gap:.5rem}
   .report-reasons label{display:flex;align-items:center;gap:.5rem;font-size:.875rem;cursor:pointer}
+  @media(max-width:480px){.related-thumb{width:88px}}
 </style>
 {% endblock %}
 {% block content %}
@@ -77,49 +65,42 @@
         <source src="{{ video.video_url }}" type="video/mp4">
       </video>
     </div>
-
     <div class="video-detail">
       <h1>{{ video.title }}</h1>
       <div class="detail-meta">
-        <span class="badge-pill" id="viewCount">{{ video.views or 0 }} views</span>
+        <span class="badge-pill" id="viewCount"><i class="fa fa-eye"></i> {{ video.views or 0 }}</span>
         <span>{{ format_wib(video.created_at) }}</span>
-        {% if video.uploader_name %}<span>oleh <a href="/uploader/{{ video.uploader_name|urlencode }}" style="color:var(--accent2);text-decoration:none;font-weight:600">{{ video.uploader_name }}</a></span>{% endif %}
+        {% if video.uploader_name %}<span>oleh <a href="/uploader/{{ video.uploader_name }}" style="color:var(--accent2);text-decoration:none;font-weight:600">{{ video.uploader_name }}</a></span>{% endif %}
         {% if video.category %}<a href="{{ url_for('category', cat=video.category) }}" class="cat-badge">{{ video.category }}</a>{% endif %}
       </div>
-
-      <!-- Reactions + Share -->
       <div class="reactions">
         <button class="react-btn {% if user_reaction=='like' %}liked{% endif %}" id="likeBtn" onclick="react('like')">
-          👍 <span id="likeCount">{{ video.likes or 0 }}</span>
+          <i class="fa fa-thumbs-up"></i> <span id="likeCount">{{ video.likes or 0 }}</span>
         </button>
         <button class="react-btn {% if user_reaction=='dislike' %}disliked{% endif %}" id="dislikeBtn" onclick="react('dislike')">
-          👎 <span id="dislikeCount">{{ video.dislikes or 0 }}</span>
+          <i class="fa fa-thumbs-down"></i> <span id="dislikeCount">{{ video.dislikes or 0 }}</span>
         </button>
-        <button class="react-btn" onclick="openReport()">🚩 Laporkan</button>
+        <button class="react-btn" onclick="openReport()"><i class="fa fa-flag"></i> Lapor</button>
         <div class="share-btns">
-          <a class="share-btn" href="https://wa.me/?text={{ video.title|urlencode }}%20{{ request.url|urlencode }}" target="_blank">WhatsApp</a>
-          <a class="share-btn" href="https://twitter.com/intent/tweet?text={{ video.title|urlencode }}&url={{ request.url|urlencode }}" target="_blank">Twitter/X</a>
-          <button class="share-btn" onclick="copyLink()">🔗 Salin</button>
+          <a class="share-btn" href="https://wa.me/?text={{ video.title|urlencode }}%20{{ request.url|urlencode }}" target="_blank"><i class="fab fa-whatsapp"></i> WA</a>
+          <a class="share-btn" href="https://twitter.com/intent/tweet?text={{ video.title|urlencode }}&url={{ request.url|urlencode }}" target="_blank"><i class="fab fa-x-twitter"></i></a>
+          <button class="share-btn" onclick="copyLink()"><i class="fa fa-link"></i> Salin</button>
         </div>
       </div>
-
       {% if video.description %}<div class="video-desc">{{ video.description }}</div>{% endif %}
-      {% if video.tags %}<div style="margin-top:.5rem;display:flex;gap:.35rem;flex-wrap:wrap">{% for tag in video.tags.split(',') %}{% if tag.strip() %}<span style="font-size:.72rem;padding:2px 8px;border-radius:99px;background:var(--surface2);color:var(--muted2);border:1px solid var(--border)">#{{ tag.strip() }}</span>{% endif %}{% endfor %}</div>{% endif %}
-
+      {% if video.tags %}<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">{% for tag in video.tags.split(',') %}{% if tag.strip() %}<span style="font-size:.7rem;padding:2px 7px;border-radius:99px;background:var(--surface2);color:var(--muted2);border:1px solid var(--border)">#{{ tag.strip() }}</span>{% endif %}{% endfor %}</div>{% endif %}
       {% if session.get('logged_in') %}
       <div class="admin-bar">
-        <a href="{{ url_for('admin_edit', video_id=video.id) }}" class="btn btn-ghost btn-sm">✏ Edit</a>
+        <a href="{{ url_for('admin_edit', video_id=video.id) }}" class="btn btn-ghost btn-sm"><i class="fa fa-pen"></i> Edit</a>
         <form method="POST" action="{{ url_for('admin_delete', video_id=video.id) }}" onsubmit="return confirm('Hapus video ini?')">
-          <button type="submit" class="btn btn-danger btn-sm">🗑 Hapus</button>
+          <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Hapus</button>
         </form>
       </div>
       {% endif %}
-
-      <!-- Embed & Share Box -->
       <div class="embed-box">
         <div class="embed-tabs">
-          <button class="embed-tab active" onclick="switchTab(this,'link')">🔗 Link</button>
-          <button class="embed-tab" onclick="switchTab(this,'embed')">🖥 Embed</button>
+          <button class="embed-tab active" onclick="switchTab(this,'link')"><i class="fa fa-link"></i> Link</button>
+          <button class="embed-tab" onclick="switchTab(this,'embed')"><i class="fa fa-code"></i> Embed</button>
         </div>
         <div class="embed-content" id="tabLink">
           <div class="embed-row">
@@ -134,16 +115,14 @@
           </div>
         </div>
       </div>
-
-      <!-- Comments -->
       <div class="comments-section">
-        <h3>Komentar (<span id="commentCount">{{ comments|length }}</span>)</h3>
+        <h3><i class="fa fa-comment"></i> Komentar (<span id="commentCount">{{ comments|length }}</span>)</h3>
         <div class="comment-form">
           <div class="comment-inputs">
             <input type="text" id="commentName" placeholder="Nama kamu (opsional)"/>
           </div>
           <textarea class="comment-textarea" id="commentText" placeholder="Tulis komentar..."></textarea>
-          <button class="comment-submit" onclick="postComment()">Kirim →</button>
+          <button class="comment-submit" onclick="postComment()"><i class="fa fa-paper-plane"></i> Kirim</button>
         </div>
         <div id="commentList">
           {% for c in comments %}
@@ -156,12 +135,11 @@
             </div>
           </div>
           {% endfor %}
-          {% if not comments %}<p style="color:var(--muted);font-size:.875rem;text-align:center;padding:1rem">Belum ada komentar. Jadilah yang pertama!</p>{% endif %}
+          {% if not comments %}<p style="color:var(--muted);font-size:.875rem;text-align:center;padding:1rem">Belum ada komentar.</p>{% endif %}
         </div>
       </div>
     </div>
   </div>
-
   <aside class="sidebar">
     <h3>Video Lainnya</h3>
     <div class="related-list">
@@ -169,7 +147,7 @@
       <a href="{{ url_for('watch', video_id=v.id) }}" class="related-card">
         <div class="related-thumb">
           {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
-          {% else %}<div class="thumb-placeholder" style="height:100%">▶</div>{% endif %}
+          {% else %}<div class="thumb-placeholder" style="height:100%"><i class="fa fa-film"></i></div>{% endif %}
         </div>
         <div>
           <div class="related-title">{{ v.title }}</div>
@@ -177,7 +155,7 @@
         </div>
       </a>
       {% endfor %}
-      {% if not related %}<p style="color:var(--muted);font-size:.85rem">Tidak ada video lain.</p>{% endif %}
+      {% if not related %}<p style="color:var(--muted);font-size:.82rem">Tidak ada video lain.</p>{% endif %}
     </div>
   </aside>
 </div>
@@ -185,7 +163,7 @@
 <!-- Report Modal -->
 <div class="modal-overlay" id="reportModal">
   <div class="modal">
-    <h3>🚩 Laporkan Video</h3>
+    <h3><i class="fa fa-flag"></i> Laporkan Video</h3>
     <div class="report-reasons">
       {% for reason in ['Konten tidak pantas','Spam atau iklan','Kekerasan','Ujaran kebencian','Hak cipta','Lainnya'] %}
       <label><input type="radio" name="reportReason" value="{{ reason }}"> {{ reason }}</label>
@@ -194,26 +172,19 @@
     <textarea id="reportDetail" placeholder="Detail tambahan (opsional)" style="width:100%;margin-top:.875rem;padding:.6rem .875rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.875rem;resize:vertical;min-height:70px;outline:none"></textarea>
     <div class="modal-actions">
       <button class="btn btn-ghost btn-sm" onclick="closeReport()">Batal</button>
-      <button class="btn btn-danger btn-sm" onclick="submitReport()">Kirim Laporan</button>
+      <button class="btn btn-danger btn-sm" onclick="submitReport()"><i class="fa fa-flag"></i> Kirim</button>
     </div>
   </div>
 </div>
-
 <script>
-const VID = '{{ video.id }}';
-let counted = false;
-document.getElementById('mainVideo').addEventListener('play', function(){
-  if(!counted){ counted=true;
-    fetch('/api/view/'+VID,{method:'POST'}).then(r=>r.json()).then(()=>{
-      const el=document.getElementById('viewCount');
-      el.textContent=(parseInt(el.textContent)+1)+' views';
-    });
-  }
+const VID='{{ video.id }}';
+let counted=false;
+document.getElementById('mainVideo').addEventListener('play',function(){
+  if(!counted){counted=true;fetch('/api/view/'+VID,{method:'POST'}).then(r=>r.json()).then(()=>{const el=document.getElementById('viewCount');el.innerHTML='<i class="fa fa-eye"></i> '+(parseInt(el.textContent.replace(/\D/g,''))+1);})}
 });
-
 async function react(type){
-  const r = await fetch('/api/react/'+VID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type})});
-  const d = await r.json();
+  const r=await fetch('/api/react/'+VID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type})});
+  const d=await r.json();
   if(d.success){
     document.getElementById('likeCount').textContent=d.likes;
     document.getElementById('dislikeCount').textContent=d.dislikes;
@@ -221,7 +192,6 @@ async function react(type){
     document.getElementById('dislikeBtn').className='react-btn'+(d.user_reaction==='dislike'?' disliked':'');
   }
 }
-
 async function postComment(){
   const name=document.getElementById('commentName').value.trim();
   const content=document.getElementById('commentText').value.trim();
@@ -236,30 +206,19 @@ async function postComment(){
     div.innerHTML=`<div class="comment-avatar">${(d.name||'A')[0].toUpperCase()}</div><div class="comment-body"><span class="cname">${d.name}</span><div class="ctext">${d.content}</div></div>`;
     list.insertBefore(div,list.firstChild);
     document.getElementById('commentCount').textContent=parseInt(document.getElementById('commentCount').textContent)+1;
-  } else { alert(d.error||'Gagal kirim komentar'); }
+  }else{alert(d.error||'Gagal kirim komentar');}
 }
-
-function copyEl(id,btn){
-  const el=document.getElementById(id);
-  navigator.clipboard.writeText(el.value).then(()=>{const t=btn.textContent;btn.textContent='✓ Tersalin!';setTimeout(()=>btn.textContent=t,2000);});
-}
-function copyLink(){navigator.clipboard.writeText(window.location.href).then(()=>alert('Link tersalin!'));}
-function switchTab(btn,tab){
-  document.querySelectorAll('.embed-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tabLink').style.display=tab==='link'?'block':'none';
-  document.getElementById('tabEmbed').style.display=tab==='embed'?'block':'none';
-}
+function copyEl(id,btn){navigator.clipboard.writeText(document.getElementById(id).value).then(()=>{const t=btn.textContent;btn.textContent='Tersalin!';setTimeout(()=>btn.textContent=t,2000);})}
+function copyLink(){navigator.clipboard.writeText(window.location.href).then(()=>alert('Link tersalin!'))}
+function switchTab(btn,tab){document.querySelectorAll('.embed-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('tabLink').style.display=tab==='link'?'block':'none';document.getElementById('tabEmbed').style.display=tab==='embed'?'block':'none';}
 function openReport(){document.getElementById('reportModal').classList.add('open')}
 function closeReport(){document.getElementById('reportModal').classList.remove('open')}
 async function submitReport(){
   const reason=document.querySelector('input[name="reportReason"]:checked')?.value;
   if(!reason){alert('Pilih alasan laporan');return;}
-  const detail=document.getElementById('reportDetail').value;
-  const r=await fetch('/api/report/'+VID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason,detail})});
+  const r=await fetch('/api/report/'+VID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason,detail:document.getElementById('reportDetail').value})});
   const d=await r.json();
-  if(d.success){closeReport();alert('Laporan terkirim. Terima kasih!');}
-  else alert(d.error||'Gagal kirim laporan');
+  if(d.success){closeReport();alert('Laporan terkirim!');}else{alert(d.error||'Gagal');}
 }
 document.getElementById('reportModal').addEventListener('click',function(e){if(e.target===this)closeReport()});
 </script>
