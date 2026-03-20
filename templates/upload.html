@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Upload Video — VIDEY{% endblock %}
+{% block head %}
+<style>
+  .upload-page { max-width:680px; margin:0 auto; padding:1.5rem 1.25rem; }
+  .page-header { margin-bottom:1.5rem; }
+  .page-header h1 { font-size:1.6rem; font-weight:800; letter-spacing:-.035em; margin-bottom:.3rem; }
+  .page-header p { color:var(--muted2); font-size:.9rem; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.75rem; }
+  .form-group { margin-bottom:1.25rem; }
+  .form-group label { display:block; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:.5rem; }
+  .form-group input[type=text], .form-group textarea {
+    width:100%; padding:.7rem 1rem; background:var(--surface2);
+    border:1px solid var(--border); border-radius:10px; outline:none;
+    color:var(--text); font-family:var(--font); font-size:.9rem;
+    transition:border-color .2s,box-shadow .2s; resize:vertical;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--glow); }
+  .form-group textarea { min-height:90px; }
+  .drop-zone { border:2px dashed var(--border2); border-radius:12px; padding:1.75rem 1rem; text-align:center; cursor:pointer; position:relative; transition:all .2s; }
+  .drop-zone:hover, .drop-zone.over { border-color:var(--accent); background:rgba(108,99,255,.06); }
+  .drop-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .drop-zone .icon { font-size:1.75rem; margin-bottom:.5rem; }
+  .drop-zone p { color:var(--muted2); font-size:.875rem; }
+  .drop-zone .file-picked { margin-top:.5rem; color:var(--accent2); font-size:.82rem; font-weight:600; word-break:break-all; }
+  .info-box { background:rgba(108,99,255,.08); border:1px solid rgba(108,99,255,.2); border-radius:10px; padding:.875rem 1rem; margin-bottom:1.25rem; font-size:.85rem; color:var(--accent2); display:flex; gap:.6rem; align-items:flex-start; }
+  .progress-wrap { display:none; margin-top:1.25rem; }
+  .progress-wrap.show { display:block; }
+  .progress-lbl { font-size:.8rem; color:var(--muted2); margin-bottom:.4rem; }
+  .progress-track { height:5px; background:var(--surface2); border-radius:99px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px; width:0%; transition:width .3s; }
+  .form-actions { display:flex; gap:.75rem; margin-top:1.5rem; flex-wrap:wrap; }
+  .submit-btn { background:var(--accent); color:#fff; border:none; border-radius:99px; padding:.65rem 1.75rem; font-family:var(--font); font-weight:700; font-size:.95rem; cursor:pointer; transition:all .2s; box-shadow:0 4px 20px var(--glow); }
+  .submit-btn:hover { opacity:.88; transform:translateY(-1px); }
+  .submit-btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="upload-page">
+  <div class="page-header">
+    <h1>Upload Video</h1>
+    <p>Bagikan video kamu ke semua orang — gratis & tanpa akun.</p>
+  </div>
+  <div class="info-box">
+    <span>ℹ️</span>
+    <span>Video yang diupload akan langsung tampil di beranda. Pastikan video tidak melanggar aturan komunitas.</span>
+  </div>
+  <div class="card">
+    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+      <div class="form-group">
+        <label>Judul Video *</label>
+        <input type="text" name="title" required placeholder="Masukkan judul video..."/>
+      </div>
+      <div class="form-group">
+        <label>Nama Kamu <span style="color:var(--muted)">(opsional)</span></label>
+        <input type="text" name="uploader_name" placeholder="Nama atau Anonymous..."/>
+      </div>
+      <div class="form-group">
+        <label>Deskripsi <span style="color:var(--muted)">(opsional)</span></label>
+        <textarea name="description" placeholder="Ceritakan tentang video ini..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>File Video * (MP4, WebM, MOV)</label>
+        <div class="drop-zone" id="vidDrop">
+          <input type="file" name="video" id="vidInput" accept="video/*" required/>
+          <div class="icon">🎬</div>
+          <p>Klik atau seret video ke sini</p>
+          <div class="file-picked" id="vidName"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Thumbnail <span style="color:var(--muted)">(opsional — otomatis jika kosong)</span></label>
+        <div class="drop-zone" id="thumbDrop">
+          <input type="file" name="thumbnail" id="thumbInput" accept="image/*"/>
+          <div class="icon">🖼️</div>
+          <p>Klik atau seret gambar thumbnail</p>
+          <div class="file-picked" id="thumbName"></div>
+        </div>
+      </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-lbl" id="progressLbl">Mengupload... 0%</div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="submit-btn" id="submitBtn">Upload Video →</button>
+        <a href="{{ url_for('index') }}" class="btn btn-ghost">Batal</a>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  document.getElementById('vidInput').addEventListener('change',function(){ document.getElementById('vidName').textContent=this.files[0]?.name||''; });
+  document.getElementById('thumbInput').addEventListener('change',function(){ document.getElementById('thumbName').textContent=this.files[0]?.name||''; });
+  ['vidDrop','thumbDrop'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
+    el.addEventListener('dragleave',()=>el.classList.remove('over'));
+    el.addEventListener('drop',()=>el.classList.remove('over'));
+  });
+  document.getElementById('uploadForm').addEventListener('submit',function(){
+    const btn=document.getElementById('submitBtn');
+    btn.disabled=true; btn.textContent='Mengupload...';
+    document.getElementById('progressWrap').classList.add('show');
+    const fill=document.getElementById('progressFill');
+    const lbl=document.getElementById('progressLbl');
+    let p=0;
+    setInterval(()=>{ p=Math.min(p+Math.random()*7,90); fill.style.width=p+'%'; lbl.textContent='Mengupload... '+Math.round(p)+'%'; },500);
+  });
+</script>
+{% endblock %}

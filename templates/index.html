@@ -49,7 +49,7 @@
       </div>
       <div class="video-info">
         <div class="video-title">{{ v.title }}</div>
-        <div class="video-meta">{{ v.views or 0 }} views</div>
+        <div class="video-meta">{{ v.views or 0 }} views · {{ v.uploader_name or "Anonymous" }}</div>
       </div>
     </a>
     {% endfor %}

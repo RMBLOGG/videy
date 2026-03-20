@@ -50,7 +50,8 @@
       <h1>{{ video.title }}</h1>
       <div class="detail-meta">
         <span class="badge" id="viewCount">{{ video.views or 0 }} views</span>
-        <span>{{ video.created_at[:10] if video.created_at else '' }}</span>
+        {% if video.uploader_name %}<span style="color:var(--muted2)">oleh <b style='color:var(--text)'>{{ video.uploader_name }}</b></span>{% endif %}
+        <span>{{ format_wib(video.created_at) }}</span>
       </div>
       {% if video.description %}
       <div class="video-desc">{{ video.description }}</div>
