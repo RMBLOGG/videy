@@ -5,7 +5,7 @@ import cloudinary.api
 from supabase import create_client, Client
 import os
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import uuid
 
 app = Flask(__name__)
@@ -23,6 +23,12 @@ _SUPABASE_URL = "https://mafnnqttvkdgqqxczqyt.supabase.co"
 _SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hZm5ucXR0dmtkZ3FxeGN6cXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzQyMDEsImV4cCI6MjA4NzQ1MDIwMX0.YRh1oWVKnn4tyQNRbcPhlSyvr7V_1LseWN7VjcImb-Y"
 
 _supabase_client = None
+
+WIB = timezone(timedelta(hours=7))
+
+def now_wib():
+    """Return current datetime in WIB (UTC+7) as ISO string."""
+    return datetime.now(WIB).isoformat()
 
 def get_supabase() -> Client:
     global _supabase_client
@@ -42,6 +48,24 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def format_wib(iso_string):
+    """Format ISO datetime string to WIB display string."""
+    if not iso_string:
+        return '-'
+    try:
+        # Parse ISO string, handle both with/without timezone
+        dt = datetime.fromisoformat(iso_string.replace('Z', '+00:00'))
+        if dt.tzinfo is None:
+            # Assume UTC if no timezone
+            dt = dt.replace(tzinfo=timezone.utc)
+        dt_wib = dt.astimezone(WIB)
+        return dt_wib.strftime('%d %b %Y, %H:%M WIB')
+    except Exception:
+        return iso_string[:10] if iso_string else '-'
+
+# Make format_wib available in all templates
+app.jinja_env.globals['format_wib'] = format_wib
+
 # ─── PUBLIC ROUTES ───────────────────────────────────────────────
 
 @app.route('/')
@@ -49,7 +73,7 @@ def index():
     try:
         response = get_supabase().table('videos').select('*').order('created_at', desc=True).execute()
         videos = response.data
-    except Exception as e:
+    except Exception:
         videos = []
     return render_template('index.html', videos=videos)
 
@@ -62,7 +86,7 @@ def watch(video_id):
             return render_template('404.html'), 404
         related = get_supabase().table('videos').select('*').neq('id', video_id).limit(6).execute()
         return render_template('watch.html', video=video, related=related.data)
-    except Exception as e:
+    except Exception:
         return render_template('404.html'), 404
 
 @app.route('/search')
@@ -73,9 +97,72 @@ def search():
         try:
             response = get_supabase().table('videos').select('*').ilike('title', f'%{query}%').execute()
             videos = response.data
-        except Exception as e:
+        except Exception:
             videos = []
     return render_template('search.html', videos=videos, query=query)
+
+# ─── PUBLIC UPLOAD (tanpa login) ─────────────────────────────────
+
+@app.route('/upload', methods=['GET', 'POST'])
+def public_upload():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        uploader_name = request.form.get('uploader_name', '').strip() or 'Anonymous'
+        video_file = request.files.get('video')
+        thumbnail_file = request.files.get('thumbnail')
+
+        if not title or not video_file:
+            flash('Judul dan file video wajib diisi.', 'error')
+            return redirect(url_for('public_upload'))
+
+        try:
+            video_upload = cloudinary.uploader.upload(
+                video_file,
+                resource_type='video',
+                folder='videy/videos',
+                chunk_size=6000000
+            )
+            video_url = video_upload['secure_url']
+            video_public_id = video_upload['public_id']
+            duration = video_upload.get('duration', 0)
+
+            thumbnail_url = None
+            if thumbnail_file and thumbnail_file.filename:
+                thumb_upload = cloudinary.uploader.upload(
+                    thumbnail_file,
+                    folder='videy/thumbnails'
+                )
+                thumbnail_url = thumb_upload['secure_url']
+            else:
+                thumbnail_url = cloudinary.CloudinaryVideo(video_public_id).build_url(
+                    resource_type='video',
+                    format='jpg',
+                    transformation=[{'start_offset': '0'}]
+                )
+
+            video_id = str(uuid.uuid4())[:8]
+            get_supabase().table('videos').insert({
+                'id': video_id,
+                'title': title,
+                'description': description,
+                'uploader_name': uploader_name,
+                'video_url': video_url,
+                'thumbnail_url': thumbnail_url,
+                'cloudinary_public_id': video_public_id,
+                'duration': int(duration),
+                'views': 0,
+                'created_at': now_wib()
+            }).execute()
+
+            flash(f'Video "{title}" berhasil diupload!', 'success')
+            return redirect(url_for('watch', video_id=video_id))
+
+        except Exception as e:
+            flash(f'Gagal upload: {str(e)}', 'error')
+            return redirect(url_for('public_upload'))
+
+    return render_template('upload.html')
 
 # ─── ADMIN ROUTES ─────────────────────────────────────────────────
 
@@ -106,7 +193,7 @@ def admin_dashboard():
         response = get_supabase().table('videos').select('*').order('created_at', desc=True).execute()
         videos = response.data
         total = len(videos)
-    except:
+    except Exception:
         videos = []
         total = 0
     return render_template('admin/dashboard.html', videos=videos, total=total)
@@ -154,12 +241,13 @@ def admin_upload():
                 'id': video_id,
                 'title': title,
                 'description': description,
+                'uploader_name': 'Admin',
                 'video_url': video_url,
                 'thumbnail_url': thumbnail_url,
                 'cloudinary_public_id': video_public_id,
                 'duration': int(duration),
                 'views': 0,
-                'created_at': datetime.utcnow().isoformat()
+                'created_at': now_wib()
             }).execute()
 
             flash(f'Video "{title}" berhasil diupload!', 'success')
@@ -193,7 +281,7 @@ def admin_edit(video_id):
     try:
         response = get_supabase().table('videos').select('*').eq('id', video_id).single().execute()
         video = response.data
-    except:
+    except Exception:
         flash('Video tidak ditemukan.', 'error')
         return redirect(url_for('admin_dashboard'))
 
@@ -219,7 +307,7 @@ def increment_view(video_id):
         current_views = response.data['views'] or 0
         get_supabase().table('videos').update({'views': current_views + 1}).eq('id', video_id).execute()
         return jsonify({'success': True})
-    except:
+    except Exception:
         return jsonify({'success': False}), 400
 
 @app.errorhandler(404)
