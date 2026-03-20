@@ -111,7 +111,6 @@
         <a href="{{ url_for('admin_logout') }}" class="nav-link">Keluar</a>
       {% else %}
         <a href="{{ url_for('public_upload') }}" class="btn btn-primary btn-sm">+ Upload</a>
-        <a href="{{ url_for('admin_login') }}" class="nav-link">Login</a>
       {% endif %}
     </div>
   </nav>
@@ -129,7 +128,7 @@
   {% block content %}{% endblock %}
 
   <footer>
-    <p>© 2025 VIDEY &nbsp;·&nbsp; <a href="{{ url_for('admin_login') }}">Admin Panel</a></p>
+    <p>© 2025 VIDEY</p>
   </footer>
   <script>
     function toggleSearch(){
