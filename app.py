@@ -63,6 +63,26 @@ def login_required(f):
 
 # ── HELPERS ──────────────────────────────────────────────────────
 
+def normalize_video(v):
+    """Ensure all expected fields exist with defaults — prevents template crashes."""
+    if not v:
+        return v
+    v.setdefault('status', 'approved')
+    v.setdefault('is_featured', False)
+    v.setdefault('is_trending', False)
+    v.setdefault('category', 'umum')
+    v.setdefault('tags', '')
+    v.setdefault('likes', 0)
+    v.setdefault('dislikes', 0)
+    v.setdefault('views', 0)
+    v.setdefault('uploader_name', 'Anonymous')
+    v.setdefault('description', '')
+    v.setdefault('uploader_ip', '')
+    return v
+
+def normalize_videos(lst):
+    return [normalize_video(v) for v in (lst or [])]
+
 def check_blacklist(title):
     """Returns matched keyword or None."""
     try:
@@ -96,20 +116,30 @@ def log_upload(ip):
 def index():
     sort = request.args.get('sort', 'terbaru')
     cat  = request.args.get('cat', '')
+    videos = []
+    featured = []
     try:
-        q = get_supabase().table('videos').select('*').eq('status', 'approved')
-        if cat:
-            q = q.eq('category', cat)
+        # Fetch all, normalize, then filter in Python (safe if new columns don't exist yet)
         if sort == 'populer':
-            q = q.order('views', desc=True)
-        elif sort == 'trending':
-            q = q.eq('is_trending', True).order('views', desc=True)
+            raw = get_supabase().table('videos').select('*').order('views', desc=True).execute().data
         else:
-            q = q.order('created_at', desc=True)
-        videos = q.execute().data
+            raw = get_supabase().table('videos').select('*').order('created_at', desc=True).execute().data
 
-        featured = [v for v in get_supabase().table('videos').select('*').eq('status','approved').eq('is_featured',True).execute().data]
-    except:
+        all_videos = normalize_videos(raw)
+
+        # Filter approved (works even if status col missing — normalize defaults to 'approved')
+        approved = [v for v in all_videos if v.get('status', 'approved') in ('approved', None, '')]
+
+        if cat:
+            approved = [v for v in approved if v.get('category', 'umum') == cat]
+
+        if sort == 'trending':
+            videos = [v for v in approved if v.get('is_trending', False)]
+        else:
+            videos = approved
+
+        featured = [v for v in all_videos if v.get('is_featured', False) and v.get('status', 'approved') in ('approved', None, '')]
+    except Exception as e:
         videos = []
         featured = []
     return render_template('index.html', videos=videos, featured=featured, sort=sort, cat=cat)
@@ -117,22 +147,35 @@ def index():
 @app.route('/v/<video_id>')
 def watch(video_id):
     try:
-        video = get_supabase().table('videos').select('*').eq('id', video_id).single().execute().data
-        if not video or video['status'] != 'approved':
+        raw = get_supabase().table('videos').select('*').eq('id', video_id).execute().data
+        if not raw:
+            return render_template('404.html'), 404
+        video = normalize_video(raw[0])
+        status = video.get('status', 'approved')
+        if status not in ('approved', None, ''):
             return render_template('404.html'), 404
 
-        # Related by same category/tags
-        related = get_supabase().table('videos').select('*').eq('status','approved').eq('category', video.get('category','umum')).neq('id', video_id).limit(8).execute().data
-        if len(related) < 4:
-            extra = get_supabase().table('videos').select('*').eq('status','approved').neq('id', video_id).order('views', desc=True).limit(8).execute().data
-            seen = {v['id'] for v in related}
-            for v in extra:
-                if v['id'] not in seen:
-                    related.append(v)
-            related = related[:8]
+        # Related videos
+        try:
+            cat = video.get('category', 'umum')
+            rel_raw = get_supabase().table('videos').select('*').neq('id', video_id).order('views', desc=True).limit(12).execute().data
+            all_rel = normalize_videos(rel_raw)
+            approved_rel = [v for v in all_rel if v.get('status','approved') in ('approved', None, '')]
+            # Prefer same category first
+            same_cat = [v for v in approved_rel if v.get('category','umum') == cat]
+            other = [v for v in approved_rel if v.get('category','umum') != cat]
+            related = (same_cat + other)[:8]
+        except:
+            related = []
 
-        comments = get_supabase().table('comments').select('*').eq('video_id', video_id).order('created_at', desc=True).execute().data
+        # Comments
+        comments = []
+        try:
+            comments = get_supabase().table('comments').select('*').eq('video_id', video_id).order('created_at', desc=True).execute().data
+        except:
+            pass
 
+        # User reaction
         ip = get_client_ip()
         user_reaction = None
         try:
@@ -152,10 +195,11 @@ def search():
     videos = []
     if query:
         try:
-            q = get_supabase().table('videos').select('*').eq('status','approved').ilike('title', f'%{query}%')
+            raw = get_supabase().table('videos').select('*').ilike('title', f'%{query}%').execute().data
+            videos = normalize_videos(raw)
+            videos = [v for v in videos if v.get('status','approved') in ('approved',None,'')]
             if cat:
-                q = q.eq('category', cat)
-            videos = q.execute().data
+                videos = [v for v in videos if v.get('category','umum') == cat]
         except:
             pass
     return render_template('search.html', videos=videos, query=query, cat=cat)
@@ -163,7 +207,9 @@ def search():
 @app.route('/category/<cat>')
 def category(cat):
     try:
-        videos = get_supabase().table('videos').select('*').eq('status','approved').eq('category', cat).order('created_at', desc=True).execute().data
+        raw = get_supabase().table('videos').select('*').order('created_at', desc=True).execute().data
+        all_v = normalize_videos(raw)
+        videos = [v for v in all_v if v.get('status','approved') in ('approved',None,'') and v.get('category','umum') == cat]
     except:
         videos = []
     return render_template('category.html', videos=videos, cat=cat)
@@ -171,7 +217,9 @@ def category(cat):
 @app.route('/uploader/<n>')
 def uploader_profile(n):
     try:
-        videos = get_supabase().table('videos').select('*').eq('status','approved').eq('uploader_name', n).order('created_at', desc=True).execute().data
+        raw = get_supabase().table('videos').select('*').eq('uploader_name', n).order('created_at', desc=True).execute().data
+        videos = normalize_videos(raw)
+        videos = [v for v in videos if v.get('status','approved') in ('approved',None,'')]
         total_views = sum(v.get('views', 0) for v in videos)
     except:
         videos = []
@@ -339,15 +387,21 @@ def admin_logout():
 @login_required
 def admin_dashboard():
     try:
-        all_videos = get_supabase().table('videos').select('*').order('created_at', desc=True).execute().data
-        pending    = [v for v in all_videos if v['status'] == 'pending']
-        approved   = [v for v in all_videos if v['status'] == 'approved']
-        reports    = get_supabase().table('reports').select('*,videos(title)').eq('reviewed', False).order('created_at', desc=True).execute().data
+        raw = get_supabase().table('videos').select('*').order('created_at', desc=True).execute().data
+        all_videos = normalize_videos(raw)
+        pending    = [v for v in all_videos if v.get('status','approved') == 'pending']
+        approved   = [v for v in all_videos if v.get('status','approved') in ('approved', None, '')]
         total_views = sum(v.get('views', 0) for v in approved)
-
-        # Views last 7 days (approximate from video created_at for now)
-        comments_count = get_supabase().table('comments').select('id').execute().data
-
+        reports = []
+        try:
+            reports = get_supabase().table('reports').select('*').eq('reviewed', False).order('created_at', desc=True).execute().data
+        except:
+            pass
+        comments_count = []
+        try:
+            comments_count = get_supabase().table('comments').select('id').execute().data
+        except:
+            pass
         stats = {
             'total': len(all_videos),
             'approved': len(approved),
@@ -368,10 +422,13 @@ def admin_dashboard():
 def admin_videos():
     status_filter = request.args.get('status', 'all')
     try:
-        q = get_supabase().table('videos').select('*').order('created_at', desc=True)
+        raw = get_supabase().table('videos').select('*').order('created_at', desc=True).execute().data
+        videos = normalize_videos(raw)
         if status_filter != 'all':
-            q = q.eq('status', status_filter)
-        videos = q.execute().data
+            if status_filter == 'approved':
+                videos = [v for v in videos if v.get('status','approved') in ('approved', None, '')]
+            else:
+                videos = [v for v in videos if v.get('status','approved') == status_filter]
     except:
         videos = []
     return render_template('admin/videos.html', videos=videos, status_filter=status_filter)
