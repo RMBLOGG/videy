@@ -1,46 +1,29 @@
 {% extends 'base.html' %}
 {% block title %}Cari "{{ query }}" — VIDEY{% endblock %}
-
 {% block content %}
 <div class="container">
-  <h2 style="font-family:var(--font-head);margin-bottom:1.5rem;letter-spacing:-0.02em">
-    {% if query %}
-      Hasil untuk "<span style="color:var(--accent)">{{ query }}</span>"
-      <span style="font-size:1rem;color:var(--muted);font-family:var(--font-body)"> — {{ videos|length }} video</span>
-    {% else %}
-      Ketik sesuatu untuk mencari
-    {% endif %}
+  <h2 style="font-size:1.3rem;font-weight:700;letter-spacing:-.025em;margin-bottom:1.25rem">
+    {% if query %}Hasil untuk "<span style="color:var(--accent2)">{{ query }}</span>" <span style="font-size:.9rem;color:var(--muted);font-weight:400">— {{ videos|length }} video</span>
+    {% else %}Ketik sesuatu untuk mencari{% endif %}
   </h2>
-
   {% if videos %}
-    <div class="video-grid">
-      {% for v in videos %}
-      <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
-        <div class="video-thumb">
-          {% if v.thumbnail_url %}
-            <img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy" />
-          {% else %}
-            <div class="thumb-placeholder">▶</div>
-          {% endif %}
-          <div class="play-icon">
-            <svg viewBox="0 0 64 64" fill="none">
-              <circle cx="32" cy="32" r="32" fill="rgba(255,255,255,0.15)"/>
-              <polygon points="26,20 26,44 46,32" fill="white"/>
-            </svg>
-          </div>
-        </div>
-        <div class="video-info">
-          <div class="video-title">{{ v.title }}</div>
-          <div class="video-meta">{{ v.views or 0 }} views</div>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
+  <div class="video-grid">
+    {% for v in videos %}
+    <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
+      <div class="video-thumb">
+        {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
+        {% else %}<div class="thumb-placeholder">▶</div>{% endif %}
+        <div class="thumb-overlay"><div class="play-btn-circle"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div></div>
+      </div>
+      <div class="video-info">
+        <div class="video-title">{{ v.title }}</div>
+        <div class="video-meta">{{ v.views or 0 }} views</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
   {% elif query %}
-    <div class="empty-state">
-      <h2>Tidak ada hasil</h2>
-      <p>Coba kata kunci lain.</p>
-    </div>
+  <div class="empty-state"><div style="font-size:3rem;margin-bottom:1rem">🔍</div><h2>Tidak ada hasil</h2><p>Coba kata kunci lain.</p></div>
   {% endif %}
 </div>
 {% endblock %}

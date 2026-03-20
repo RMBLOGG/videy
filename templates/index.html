@@ -1,87 +1,65 @@
 {% extends 'base.html' %}
-{% block title %}VIDEY — Share Videos Instantly{% endblock %}
-
+{% block title %}VIDEY — Streaming Video{% endblock %}
 {% block head %}
 <style>
   .hero {
-    padding: 4rem 2rem 2rem;
-    max-width: 1200px; margin: 0 auto;
-    display: flex; align-items: flex-end;
-    gap: 2rem; justify-content: space-between;
+    padding: 3rem 1.25rem 1.5rem;
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;
+    flex-wrap: wrap;
   }
   .hero-title {
-    font-family: var(--font-head);
-    font-size: clamp(2.5rem, 6vw, 5rem);
-    font-weight: 800;
-    line-height: 1; letter-spacing: -0.04em;
-    color: var(--text);
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    font-weight: 800; letter-spacing: -0.05em; line-height: 1;
   }
-  .hero-title .accent { color: var(--accent); }
-  .hero-sub { color: var(--muted); font-size: 1rem; margin-top: 0.5rem; }
-
-  .section-label {
-    font-family: var(--font-head); font-size: 0.7rem;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 1rem;
-    display: flex; align-items: center; gap: 0.75rem;
+  .hero-title .grad {
+    background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
-  .section-label::after {
-    content: ''; flex: 1;
-    height: 1px; background: var(--border);
-  }
-  .videos-section { padding-bottom: 3rem; }
+  .hero-sub { color: var(--muted2); font-size: .95rem; margin-top: .5rem; }
+  .fade-in { animation: fadeUp .5s ease both; }
+  .fade-in:nth-child(2) { animation-delay:.1s }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 </style>
 {% endblock %}
-
 {% block content %}
 <div class="hero">
-  <div>
-    <h1 class="hero-title">Share<br><span class="accent">Video.</span></h1>
-    <p class="hero-sub">Platform streaming video sederhana & cepat.</p>
+  <div class="fade-in">
+    <h1 class="hero-title"><span class="grad">Share</span><br>Video.</h1>
+    <p class="hero-sub">Platform streaming cepat & simpel.</p>
   </div>
   {% if session.get('logged_in') %}
-  <a href="{{ url_for('admin_upload') }}" class="btn btn-primary">+ Upload Video</a>
+  <a href="{{ url_for('admin_upload') }}" class="btn btn-primary fade-in">+ Upload Video</a>
   {% endif %}
 </div>
-
-<div class="container videos-section">
+<div class="container">
   <div class="section-label">Video Terbaru</div>
   {% if videos %}
-    <div class="video-grid">
-      {% for v in videos %}
-      <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
-        <div class="video-thumb">
-          {% if v.thumbnail_url %}
-            <img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy" />
-          {% else %}
-            <div class="thumb-placeholder">▶</div>
-          {% endif %}
-          <div class="play-icon">
-            <svg viewBox="0 0 64 64" fill="none">
-              <circle cx="32" cy="32" r="32" fill="rgba(255,255,255,0.15)"/>
-              <polygon points="26,20 26,44 46,32" fill="white"/>
-            </svg>
-          </div>
-          {% if v.duration %}
-            <span class="video-duration">
-              {% set m = (v.duration // 60)|int %}
-              {% set s = (v.duration % 60)|int %}
-              {{ '%d:%02d'|format(m, s) }}
-            </span>
-          {% endif %}
+  <div class="video-grid">
+    {% for v in videos %}
+    <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
+      <div class="video-thumb">
+        {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
+        {% else %}<div class="thumb-placeholder">▶</div>{% endif %}
+        <div class="thumb-overlay">
+          <div class="play-btn-circle"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div>
         </div>
-        <div class="video-info">
-          <div class="video-title">{{ v.title }}</div>
-          <div class="video-meta">{{ v.views or 0 }} views</div>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
+        {% if v.duration %}<span class="video-duration">{% set m=(v.duration//60)|int %}{% set s=(v.duration%60)|int %}{{ '%d:%02d'|format(m,s) }}</span>{% endif %}
+      </div>
+      <div class="video-info">
+        <div class="video-title">{{ v.title }}</div>
+        <div class="video-meta">{{ v.views or 0 }} views</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
   {% else %}
-    <div class="empty-state">
-      <h2>Belum ada video</h2>
-      <p>{% if session.get('logged_in') %}<a href="{{ url_for('admin_upload') }}" class="btn btn-primary" style="margin-top:1rem">Upload Video Pertama</a>{% else %}Nantikan konten baru segera.{% endif %}</p>
-    </div>
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:1rem">🎬</div>
+    <h2>Belum ada video</h2>
+    <p>{% if session.get('logged_in') %}<a href="{{ url_for('admin_upload') }}" class="btn btn-primary" style="margin-top:1.25rem">Upload Video Pertama</a>{% else %}Nantikan konten baru.{% endif %}</p>
+  </div>
   {% endif %}
 </div>
 {% endblock %}
