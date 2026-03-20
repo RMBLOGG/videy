@@ -97,7 +97,7 @@
 </head>
 <body>
   <nav>
-    <a href="{{ url_for('index') }}" class="nav-logo"><span class="dot"></span>VIDEY</a>
+    <a href="{{ url_for('index') }}" class="nav-logo"><span class="dot"></span>VIDEYsky</a>
     <form class="nav-search" id="navSearch" action="{{ url_for('search') }}" method="get">
       <input type="text" name="q" placeholder="Cari video..." value="{{ request.args.get('q', '') }}" autocomplete="off" />
       <button type="submit">Cari</button>
@@ -128,7 +128,7 @@
   {% block content %}{% endblock %}
 
   <footer>
-    <p>© 2025 VIDEY</p>
+    <p>© 2025 VIDEYsky</p>
   </footer>
   <script>
     function toggleSearch(){
