@@ -1,138 +1,79 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard Admin — VIDEY{% endblock %}
-
+{% block title %}Dashboard — VIDEY Admin{% endblock %}
 {% block head %}
 <style>
-  .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem; }
-  .admin-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 2rem;
-  }
-  .admin-header h1 {
-    font-family: var(--font-head); font-size: 1.8rem;
-    font-weight: 800; letter-spacing: -0.03em;
-  }
-  .stats-row {
-    display: flex; gap: 1rem; margin-bottom: 2rem;
-  }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1.25rem 1.5rem; flex: 1;
-  }
-  .stat-card .stat-val {
-    font-family: var(--font-head); font-size: 2.2rem;
-    font-weight: 800; color: var(--accent);
-  }
-  .stat-card .stat-label {
-    font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem;
-    text-transform: uppercase; letter-spacing: 0.08em;
-  }
+  .admin-page { max-width:1100px; margin:0 auto; padding:1.5rem 1.25rem; }
+  .admin-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem; }
+  .admin-header h1 { font-size:1.6rem; font-weight:800; letter-spacing:-.035em; }
+  .stats { display:flex; gap:.875rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .stat { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:1.1rem 1.25rem; flex:1; min-width:120px; }
+  .stat .val { font-size:2rem; font-weight:800; color:var(--accent2); letter-spacing:-.03em; line-height:1; }
+  .stat .lbl { font-size:.72rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:.3rem; }
 
-  .table-wrap {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden;
-  }
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    text-align: left; padding: 0.875rem 1rem;
-    font-size: 0.75rem; text-transform: uppercase;
-    letter-spacing: 0.1em; color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    font-family: var(--font-head);
-  }
-  td {
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.9rem; vertical-align: middle;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
+  /* TABLE — mobile scrollable */
+  .table-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+  .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { width:100%; border-collapse:collapse; min-width:560px; }
+  th { text-align:left; padding:.8rem 1rem; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { padding:.8rem 1rem; border-bottom:1px solid var(--border); font-size:.875rem; vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tbody tr:hover td { background:var(--surface2); }
 
-  .table-thumb {
-    width: 80px; aspect-ratio: 16/9;
-    border-radius: 6px; overflow: hidden;
-    background: var(--surface2); flex-shrink: 0;
-  }
-  .table-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .video-title-cell {
-    display: flex; align-items: center; gap: 0.875rem;
-  }
-  .video-title-text {
-    font-weight: 500;
-    max-width: 280px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .actions-cell { display: flex; gap: 0.5rem; }
-
-  @media (max-width: 700px) {
-    .stats-row { flex-direction: column; }
-    .table-thumb { display: none; }
-  }
+  .table-thumb { width:72px; aspect-ratio:16/9; border-radius:6px; overflow:hidden; background:var(--surface2); flex-shrink:0; }
+  .table-thumb img { width:100%; height:100%; object-fit:cover; }
+  .title-cell { display:flex; align-items:center; gap:.75rem; }
+  .title-text { font-weight:600; max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .actions { display:flex; gap:.375rem; flex-wrap:nowrap; }
 </style>
 {% endblock %}
-
 {% block content %}
-<div class="admin-wrap">
+<div class="admin-page">
   <div class="admin-header">
-    <h1>Dashboard Admin</h1>
+    <h1>Dashboard</h1>
     <a href="{{ url_for('admin_upload') }}" class="btn btn-primary">+ Upload Video</a>
   </div>
-
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-val">{{ total }}</div>
-      <div class="stat-label">Total Video</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">{{ videos | sum(attribute='views') or 0 }}</div>
-      <div class="stat-label">Total Views</div>
-    </div>
+  <div class="stats">
+    <div class="stat"><div class="val">{{ total }}</div><div class="lbl">Total Video</div></div>
+    <div class="stat"><div class="val">{{ videos|sum(attribute='views') or 0 }}</div><div class="lbl">Total Views</div></div>
   </div>
-
-  <div class="table-wrap">
+  <div class="table-card">
     {% if videos %}
-    <table>
-      <thead>
-        <tr>
-          <th>Video</th>
-          <th>Views</th>
-          <th>Tanggal</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for v in videos %}
-        <tr>
-          <td>
-            <div class="video-title-cell">
-              <div class="table-thumb">
-                {% if v.thumbnail_url %}
-                  <img src="{{ v.thumbnail_url }}" alt="" />
-                {% else %}
-                  <div style="height:100%;display:flex;align-items:center;justify-content:center;color:#444">▶</div>
-                {% endif %}
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Video</th><th>Views</th><th>Tanggal</th><th>Aksi</th></tr>
+        </thead>
+        <tbody>
+          {% for v in videos %}
+          <tr>
+            <td>
+              <div class="title-cell">
+                <div class="table-thumb">
+                  {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt=""/>
+                  {% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">▶</div>{% endif %}
+                </div>
+                <a href="{{ url_for('watch', video_id=v.id) }}" class="title-text" style="color:var(--text);text-decoration:none" target="_blank">{{ v.title }}</a>
               </div>
-              <a href="{{ url_for('watch', video_id=v.id) }}" class="video-title-text" style="color:var(--text);text-decoration:none;" target="_blank">{{ v.title }}</a>
-            </div>
-          </td>
-          <td>{{ v.views or 0 }}</td>
-          <td>{{ v.created_at[:10] if v.created_at else '-' }}</td>
-          <td>
-            <div class="actions-cell">
-              <a href="{{ url_for('admin_edit', video_id=v.id) }}" class="btn btn-ghost" style="padding:0.4rem 0.75rem;font-size:0.8rem">Edit</a>
-              <form method="POST" action="{{ url_for('admin_delete', video_id=v.id) }}" onsubmit="return confirm('Hapus video ini?')">
-                <button type="submit" class="btn btn-danger" style="padding:0.4rem 0.75rem;font-size:0.8rem">Hapus</button>
-              </form>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </td>
+            <td style="color:var(--muted2)">{{ v.views or 0 }}</td>
+            <td style="color:var(--muted2);font-family:var(--mono);font-size:.78rem">{{ v.created_at[:10] if v.created_at else '-' }}</td>
+            <td>
+              <div class="actions">
+                <a href="{{ url_for('admin_edit', video_id=v.id) }}" class="btn btn-ghost btn-sm">Edit</a>
+                <form method="POST" action="{{ url_for('admin_delete', video_id=v.id) }}" onsubmit="return confirm('Hapus video ini?')">
+                  <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
     {% else %}
     <div class="empty-state" style="padding:3rem">
       <h2>Belum ada video</h2>
-      <a href="{{ url_for('admin_upload') }}" class="btn btn-primary" style="margin-top:1rem">Upload Sekarang</a>
+      <p><a href="{{ url_for('admin_upload') }}" class="btn btn-primary" style="margin-top:1rem">Upload Sekarang</a></p>
     </div>
     {% endif %}
   </div>
