@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Komentar — VIDEY Admin{% endblock %}
+{% block head %}
+<style>
+  .admin-page{max-width:1000px;margin:0 auto;padding:1.5rem 1.25rem}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+  table{width:100%;border-collapse:collapse;min-width:600px}
+  th{text-align:left;padding:.75rem 1rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);border-bottom:1px solid var(--border)}
+  td{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.875rem;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1.5rem">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost btn-sm">← Dashboard</a>
+    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em">Komentar</h1>
+    <span style="color:var(--muted);font-size:.875rem">{{ comments|length }}</span>
+  </div>
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Nama</th><th>Komentar</th><th>Video</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+        <tbody>
+          {% for c in comments %}
+          <tr>
+            <td style="font-weight:600;white-space:nowrap">{{ c.name or 'Anonymous' }}</td>
+            <td style="max-width:280px;color:var(--muted2)">{{ c.content[:100] }}{% if c.content|length > 100 %}...{% endif %}</td>
+            <td><a href="{{ url_for('watch', video_id=c.video_id) }}" style="color:var(--accent2);text-decoration:none;font-size:.8rem" target="_blank">{{ c.video_title[:30] }}</a></td>
+            <td style="font-size:.75rem;color:var(--muted2);white-space:nowrap;font-family:var(--mono)">{{ format_wib(c.created_at) }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('delete_comment', comment_id=c.id) }}">
+                <button type="submit" class="btn btn-danger btn-xs" onclick="return confirm('Hapus komentar?')">Hapus</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" style="text-align:center;padding:3rem;color:var(--muted)">Belum ada komentar</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

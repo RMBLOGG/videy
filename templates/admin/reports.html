@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Laporan — VIDEY Admin{% endblock %}
+{% block head %}
+<style>
+  .admin-page{max-width:1100px;margin:0 auto;padding:1.5rem 1.25rem}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+  table{width:100%;border-collapse:collapse;min-width:600px}
+  th{text-align:left;padding:.75rem 1rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.875rem;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .r-open{color:var(--red);font-weight:600}
+  .r-done{color:var(--muted2)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1.5rem;flex-wrap:wrap">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost btn-sm">← Dashboard</a>
+    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em">Laporan Video</h1>
+    <span style="color:var(--muted);font-size:.875rem">{{ reports|length }} laporan</span>
+  </div>
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Video</th><th>Alasan</th><th>Detail</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+        <tbody>
+          {% for r in reports %}
+          <tr>
+            <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              <a href="{{ url_for('watch', video_id=r.video_id) }}" style="color:var(--accent2);text-decoration:none" target="_blank">{{ r.video_title }}</a>
+            </td>
+            <td style="font-weight:600">{{ r.reason }}</td>
+            <td style="color:var(--muted2);max-width:200px;font-size:.8rem">{{ r.detail or '-' }}</td>
+            <td><span class="{% if r.reviewed %}r-done{% else %}r-open{% endif %}">{{ 'Selesai' if r.reviewed else 'Belum' }}</span></td>
+            <td style="font-size:.75rem;color:var(--muted2);font-family:var(--mono)">{{ format_wib(r.created_at) }}</td>
+            <td>
+              {% if not r.reviewed %}
+              <form method="POST" action="{{ url_for('resolve_report', report_id=r.id) }}" style="display:inline">
+                <button type="submit" class="btn btn-success btn-xs">✓ Selesai</button>
+              </form>
+              {% endif %}
+              <a href="{{ url_for('watch', video_id=r.video_id) }}" class="btn btn-ghost btn-xs" target="_blank">Lihat</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--muted)">Tidak ada laporan 🎉</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

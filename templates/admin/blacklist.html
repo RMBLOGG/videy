@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Blacklist — VIDEY Admin{% endblock %}
+{% block head %}
+<style>
+  .admin-page{max-width:700px;margin:0 auto;padding:1.5rem 1.25rem}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;margin-bottom:1.25rem}
+  .form-row{display:flex;gap:.625rem}
+  .form-row input{flex:1;padding:.65rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;outline:none;color:var(--text);font-family:var(--font);font-size:.9rem;transition:border-color .2s}
+  .form-row input:focus{border-color:var(--accent)}
+  .kw-list{display:flex;flex-wrap:wrap;gap:.5rem;padding:1rem 1.25rem}
+  .kw-tag{display:flex;align-items:center;gap:.35rem;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.2);color:var(--red);padding:.3rem .75rem;border-radius:99px;font-size:.82rem;font-weight:600}
+  .kw-del{background:none;border:none;cursor:pointer;color:var(--red);font-size:.9rem;padding:0;line-height:1}
+  .kw-del:hover{opacity:.7}
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1.5rem">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost btn-sm">← Dashboard</a>
+    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em">Blacklist Kata</h1>
+  </div>
+  <div class="card">
+    <p style="color:var(--muted2);font-size:.875rem;margin-bottom:1rem">Judul video dan komentar yang mengandung kata di bawah akan otomatis ditolak.</p>
+    <form method="POST">
+      <div class="form-row">
+        <input type="text" name="keyword" placeholder="Tambah kata terlarang..." required/>
+        <button type="submit" class="btn btn-primary btn-sm">Tambah</button>
+      </div>
+    </form>
+  </div>
+  <div class="card" style="padding:0">
+    {% if keywords %}
+    <div class="kw-list">
+      {% for kw in keywords %}
+      <div class="kw-tag">
+        {{ kw.keyword }}
+        <form method="POST" action="{{ url_for('delete_blacklist', kw_id=kw.id) }}" style="display:inline">
+          <button type="submit" class="kw-del" title="Hapus">✕</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.875rem">Belum ada kata dalam blacklist.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
