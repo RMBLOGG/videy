@@ -582,9 +582,6 @@ def delete_comment(comment_id):
 def not_found(e):
     return render_template('404.html'), 404
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
 @app.route('/embed/<video_id>')
 def embed(video_id):
     try:
@@ -593,3 +590,6 @@ def embed(video_id):
         return render_template('embed.html', video=video)
     except:
         return "Video not found", 404
+
+if __name__ == '__main__':
+    app.run(debug=True)
