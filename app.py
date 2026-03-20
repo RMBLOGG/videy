@@ -103,66 +103,39 @@ def search():
 
 # ─── PUBLIC UPLOAD (tanpa login) ─────────────────────────────────
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload')
 def public_upload():
-    if request.method == 'POST':
-        title = request.form.get('title', '').strip()
-        description = request.form.get('description', '').strip()
-        uploader_name = request.form.get('uploader_name', '').strip() or 'Anonymous'
-        video_file = request.files.get('video')
-        thumbnail_file = request.files.get('thumbnail')
-
-        if not title or not video_file:
-            flash('Judul dan file video wajib diisi.', 'error')
-            return redirect(url_for('public_upload'))
-
-        try:
-            video_upload = cloudinary.uploader.upload(
-                video_file,
-                resource_type='video',
-                folder='videy/videos',
-                chunk_size=6000000
-            )
-            video_url = video_upload['secure_url']
-            video_public_id = video_upload['public_id']
-            duration = video_upload.get('duration', 0)
-
-            thumbnail_url = None
-            if thumbnail_file and thumbnail_file.filename:
-                thumb_upload = cloudinary.uploader.upload(
-                    thumbnail_file,
-                    folder='videy/thumbnails'
-                )
-                thumbnail_url = thumb_upload['secure_url']
-            else:
-                thumbnail_url = cloudinary.CloudinaryVideo(video_public_id).build_url(
-                    resource_type='video',
-                    format='jpg',
-                    transformation=[{'start_offset': '0'}]
-                )
-
-            video_id = str(uuid.uuid4())[:8]
-            get_supabase().table('videos').insert({
-                'id': video_id,
-                'title': title,
-                'description': description,
-                'uploader_name': uploader_name,
-                'video_url': video_url,
-                'thumbnail_url': thumbnail_url,
-                'cloudinary_public_id': video_public_id,
-                'duration': int(duration),
-                'views': 0,
-                'created_at': now_wib()
-            }).execute()
-
-            flash(f'Video "{title}" berhasil diupload!', 'success')
-            return redirect(url_for('watch', video_id=video_id))
-
-        except Exception as e:
-            flash(f'Gagal upload: {str(e)}', 'error')
-            return redirect(url_for('public_upload'))
-
     return render_template('upload.html')
+
+# API endpoint — menerima data video setelah upload langsung ke Cloudinary dari browser
+@app.route('/api/save-video', methods=['POST'])
+def save_video():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data received'}), 400
+
+        title = data.get('title', '').strip()
+        if not title:
+            return jsonify({'success': False, 'error': 'Judul wajib diisi'}), 400
+
+        video_id = str(uuid.uuid4())[:8]
+        get_supabase().table('videos').insert({
+            'id': video_id,
+            'title': title,
+            'description': data.get('description', ''),
+            'uploader_name': data.get('uploader_name', 'Anonymous'),
+            'video_url': data.get('video_url', ''),
+            'thumbnail_url': data.get('thumbnail_url', ''),
+            'cloudinary_public_id': data.get('cloudinary_public_id', ''),
+            'duration': int(data.get('duration', 0)),
+            'views': 0,
+            'created_at': now_wib()
+        }).execute()
+
+        return jsonify({'success': True, 'video_id': video_id})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ─── ADMIN ROUTES ─────────────────────────────────────────────────
 
@@ -198,65 +171,9 @@ def admin_dashboard():
         total = 0
     return render_template('admin/dashboard.html', videos=videos, total=total)
 
-@app.route('/admin/upload', methods=['GET', 'POST'])
+@app.route('/admin/upload')
 @login_required
 def admin_upload():
-    if request.method == 'POST':
-        title = request.form.get('title', '').strip()
-        description = request.form.get('description', '').strip()
-        video_file = request.files.get('video')
-        thumbnail_file = request.files.get('thumbnail')
-
-        if not title or not video_file:
-            flash('Judul dan file video wajib diisi.', 'error')
-            return redirect(url_for('admin_upload'))
-
-        try:
-            video_upload = cloudinary.uploader.upload(
-                video_file,
-                resource_type='video',
-                folder='videy/videos',
-                chunk_size=6000000
-            )
-            video_url = video_upload['secure_url']
-            video_public_id = video_upload['public_id']
-            duration = video_upload.get('duration', 0)
-
-            thumbnail_url = None
-            if thumbnail_file and thumbnail_file.filename:
-                thumb_upload = cloudinary.uploader.upload(
-                    thumbnail_file,
-                    folder='videy/thumbnails'
-                )
-                thumbnail_url = thumb_upload['secure_url']
-            else:
-                thumbnail_url = cloudinary.CloudinaryVideo(video_public_id).build_url(
-                    resource_type='video',
-                    format='jpg',
-                    transformation=[{'start_offset': '0'}]
-                )
-
-            video_id = str(uuid.uuid4())[:8]
-            get_supabase().table('videos').insert({
-                'id': video_id,
-                'title': title,
-                'description': description,
-                'uploader_name': 'Admin',
-                'video_url': video_url,
-                'thumbnail_url': thumbnail_url,
-                'cloudinary_public_id': video_public_id,
-                'duration': int(duration),
-                'views': 0,
-                'created_at': now_wib()
-            }).execute()
-
-            flash(f'Video "{title}" berhasil diupload!', 'success')
-            return redirect(url_for('admin_dashboard'))
-
-        except Exception as e:
-            flash(f'Error upload: {str(e)}', 'error')
-            return redirect(url_for('admin_upload'))
-
     return render_template('admin/upload.html')
 
 @app.route('/admin/delete/<video_id>', methods=['POST'])
