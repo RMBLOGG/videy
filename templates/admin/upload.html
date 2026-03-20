@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Upload Video — VIDEY{% endblock %}
+{% block title %}Upload Video — VIDEY Admin{% endblock %}
 {% block head %}
 <style>
   .upload-page { max-width:680px; margin:0 auto; padding:1.5rem 1.25rem; }
@@ -19,13 +19,14 @@
   .drop-zone .file-picked { margin-top:.5rem; color:var(--accent2); font-size:.82rem; font-weight:600; word-break:break-all; }
   .progress-wrap { display:none; margin-top:1.25rem; }
   .progress-wrap.show { display:block; }
-  .progress-lbl { font-size:.8rem; color:var(--muted2); margin-bottom:.4rem; }
-  .progress-track { height:5px; background:var(--surface2); border-radius:99px; overflow:hidden; }
-  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px; width:0%; transition:width .3s; }
+  .progress-lbl { font-size:.85rem; color:var(--muted2); margin-bottom:.5rem; font-weight:500; }
+  .progress-track { height:6px; background:var(--surface2); border-radius:99px; overflow:hidden; margin-bottom:.4rem; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px; width:0%; transition:width .25s; }
+  .progress-pct { font-size:.78rem; color:var(--muted); font-family:var(--mono); }
   .form-actions { display:flex; gap:.75rem; margin-top:1.5rem; flex-wrap:wrap; }
   .submit-btn { background:var(--accent); color:#fff; border:none; border-radius:99px; padding:.65rem 1.75rem; font-family:var(--font); font-weight:700; font-size:.95rem; cursor:pointer; transition:all .2s; box-shadow:0 4px 20px var(--glow); }
   .submit-btn:hover { opacity:.88; transform:translateY(-1px); }
-  .submit-btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+  .submit-btn:disabled { opacity:.45; cursor:not-allowed; transform:none; box-shadow:none; }
 </style>
 {% endblock %}
 {% block content %}
@@ -35,61 +36,128 @@
     <h1>Upload Video</h1>
   </div>
   <div class="card">
-    <form method="POST" enctype="multipart/form-data" id="uploadForm">
-      <div class="form-group">
-        <label>Judul Video *</label>
-        <input type="text" name="title" required placeholder="Masukkan judul video..."/>
+    <div class="form-group">
+      <label>Judul Video *</label>
+      <input type="text" id="title" required placeholder="Masukkan judul video..."/>
+    </div>
+    <div class="form-group">
+      <label>Deskripsi</label>
+      <textarea id="description" placeholder="Deskripsi (opsional)..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>File Video * (MP4, WebM, MOV)</label>
+      <div class="drop-zone" id="vidDrop">
+        <input type="file" id="vidInput" accept="video/*"/>
+        <div class="icon">🎬</div>
+        <p>Klik atau seret video ke sini</p>
+        <div class="file-picked" id="vidName"></div>
       </div>
-      <div class="form-group">
-        <label>Deskripsi</label>
-        <textarea name="description" placeholder="Deskripsi (opsional)..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Thumbnail <span style="color:var(--muted)">(opsional)</span></label>
+      <div class="drop-zone" id="thumbDrop">
+        <input type="file" id="thumbInput" accept="image/*"/>
+        <div class="icon">🖼️</div>
+        <p>Klik atau seret gambar thumbnail</p>
+        <div class="file-picked" id="thumbName"></div>
       </div>
-      <div class="form-group">
-        <label>File Video * (MP4, WebM, MOV)</label>
-        <div class="drop-zone" id="vidDrop">
-          <input type="file" name="video" id="vidInput" accept="video/*" required/>
-          <div class="icon">🎬</div>
-          <p>Klik atau seret video ke sini</p>
-          <div class="file-picked" id="vidName"></div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Thumbnail <span style="color:var(--muted)">(opsional)</span></label>
-        <div class="drop-zone" id="thumbDrop">
-          <input type="file" name="thumbnail" id="thumbInput" accept="image/*"/>
-          <div class="icon">🖼️</div>
-          <p>Klik atau seret gambar thumbnail</p>
-          <div class="file-picked" id="thumbName"></div>
-        </div>
-      </div>
-      <div class="progress-wrap" id="progressWrap">
-        <div class="progress-lbl" id="progressLbl">Mengupload... 0%</div>
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="submit-btn" id="submitBtn">Upload Video →</button>
-        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">Batal</a>
-      </div>
-    </form>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-lbl" id="progressLbl">Mempersiapkan...</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-pct" id="progressPct">0%</div>
+    </div>
+    <div class="form-actions">
+      <button class="submit-btn" id="submitBtn" onclick="startUpload()">Upload Video →</button>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">Batal</a>
+    </div>
   </div>
 </div>
 <script>
-  document.getElementById('vidInput').addEventListener('change',function(){ document.getElementById('vidName').textContent=this.files[0]?.name||''; });
-  document.getElementById('thumbInput').addEventListener('change',function(){ document.getElementById('thumbName').textContent=this.files[0]?.name||''; });
-  ['vidDrop','thumbDrop'].forEach(id=>{
-    const el=document.getElementById(id);
-    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
-    el.addEventListener('dragleave',()=>el.classList.remove('over'));
-    el.addEventListener('drop',()=>el.classList.remove('over'));
+const CLOUD_NAME = "dzfkklsza";
+const UPLOAD_PRESET = "videy_unsigned";
+
+document.getElementById('vidInput').addEventListener('change',function(){ document.getElementById('vidName').textContent=this.files[0]?.name||''; });
+document.getElementById('thumbInput').addEventListener('change',function(){ document.getElementById('thumbName').textContent=this.files[0]?.name||''; });
+['vidDrop','thumbDrop'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
+  el.addEventListener('dragleave',()=>el.classList.remove('over'));
+  el.addEventListener('drop',()=>el.classList.remove('over'));
+});
+
+function setProgress(pct, label) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = Math.round(pct) + '%';
+  document.getElementById('progressLbl').textContent = label;
+}
+
+async function uploadToCloudinary(file, resourceType, onProgress) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('folder', 'videy/' + (resourceType === 'video' ? 'videos' : 'thumbnails'));
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`);
+    xhr.upload.addEventListener('progress', e => { if (e.lengthComputable) onProgress(e.loaded / e.total * 100); });
+    xhr.onload = () => { if (xhr.status === 200) resolve(JSON.parse(xhr.responseText)); else reject(new Error('Upload gagal: ' + xhr.responseText)); };
+    xhr.onerror = () => reject(new Error('Koneksi gagal'));
+    xhr.send(formData);
   });
-  document.getElementById('uploadForm').addEventListener('submit',function(){
-    const btn=document.getElementById('submitBtn');
-    btn.disabled=true; btn.textContent='Mengupload...';
-    document.getElementById('progressWrap').classList.add('show');
-    const fill=document.getElementById('progressFill');
-    const lbl=document.getElementById('progressLbl');
-    let p=0;
-    const iv=setInterval(()=>{ p=Math.min(p+Math.random()*7,90); fill.style.width=p+'%'; lbl.textContent='Mengupload... '+Math.round(p)+'%'; },500);
-  });
+}
+
+async function startUpload() {
+  const title = document.getElementById('title').value.trim();
+  const videoFile = document.getElementById('vidInput').files[0];
+  if (!title) { alert('Judul video wajib diisi!'); return; }
+  if (!videoFile) { alert('Pilih file video terlebih dahulu!'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  document.getElementById('progressWrap').classList.add('show');
+
+  try {
+    setProgress(0, 'Mengupload video...');
+    const videoResult = await uploadToCloudinary(videoFile, 'video', pct => {
+      setProgress(pct * 0.8, `Mengupload video... ${Math.round(pct)}%`);
+    });
+
+    let thumbnailUrl = null;
+    const thumbFile = document.getElementById('thumbInput').files[0];
+    if (thumbFile) {
+      setProgress(82, 'Mengupload thumbnail...');
+      const thumbResult = await uploadToCloudinary(thumbFile, 'image', () => {});
+      thumbnailUrl = thumbResult.secure_url;
+    } else {
+      thumbnailUrl = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_0/videy/videos/${videoResult.public_id.split('/').pop()}.jpg`;
+    }
+
+    setProgress(90, 'Menyimpan ke database...');
+    const resp = await fetch('/api/save-video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: title,
+        description: document.getElementById('description').value.trim(),
+        uploader_name: 'Admin',
+        video_url: videoResult.secure_url,
+        thumbnail_url: thumbnailUrl,
+        cloudinary_public_id: videoResult.public_id,
+        duration: Math.round(videoResult.duration || 0)
+      })
+    });
+
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error || 'Gagal menyimpan');
+
+    setProgress(100, 'Selesai!');
+    window.location.href = '/admin';
+  } catch (err) {
+    btn.disabled = false;
+    document.getElementById('progressWrap').classList.remove('show');
+    alert('Error: ' + err.message);
+  }
+}
 </script>
 {% endblock %}
