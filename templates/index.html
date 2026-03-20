@@ -2,39 +2,77 @@
 {% block title %}VIDEY — Streaming Video{% endblock %}
 {% block head %}
 <style>
-  .hero {
-    padding: 3rem 1.25rem 1.5rem;
-    max-width: 1280px; margin: 0 auto;
-    display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;
-    flex-wrap: wrap;
-  }
-  .hero-title {
-    font-size: clamp(2rem, 6vw, 4.5rem);
-    font-weight: 800; letter-spacing: -0.05em; line-height: 1;
-  }
-  .hero-title .grad {
-    background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .hero-sub { color: var(--muted2); font-size: .95rem; margin-top: .5rem; }
-  .fade-in { animation: fadeUp .5s ease both; }
-  .fade-in:nth-child(2) { animation-delay:.1s }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .hero{padding:2.5rem 1.25rem 1.5rem;max-width:1280px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  .hero-title{font-size:clamp(1.8rem,5vw,4rem);font-weight:800;letter-spacing:-.05em;line-height:1}
+  .hero-title .grad{background:linear-gradient(135deg,#fff 0%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero-sub{color:var(--muted2);font-size:.9rem;margin-top:.4rem}
+
+  /* Filter bar */
+  .filter-bar{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem}
+  .filter-btn{padding:.35rem .85rem;border-radius:99px;font-size:.8rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);transition:all .2s;background:var(--surface)}
+  .filter-btn:hover,.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 10px var(--glow)}
+
+  /* Featured */
+  .featured-section{margin-bottom:1.5rem}
+  .featured-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+
+  /* Categories row */
+  .cat-row{display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.5rem;margin-bottom:1.5rem;scrollbar-width:none}
+  .cat-row::-webkit-scrollbar{display:none}
+  .cat-chip{padding:.35rem .9rem;border-radius:99px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);white-space:nowrap;transition:all .2s;background:var(--surface)}
+  .cat-chip:hover,.cat-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 {% endblock %}
 {% block content %}
 <div class="hero">
-  <div class="fade-in">
+  <div>
     <h1 class="hero-title"><span class="grad">Share</span><br>Video.</h1>
     <p class="hero-sub">Platform streaming cepat & simpel.</p>
   </div>
-  {% if session.get('logged_in') %}
-  <a href="{{ url_for('admin_upload') }}" class="btn btn-primary fade-in">+ Upload Video</a>
-  {% endif %}
 </div>
+
 <div class="container">
-  <div class="section-label">Video Terbaru</div>
+  <!-- Category chips -->
+  <div class="cat-row">
+    <a href="{{ url_for('index') }}" class="cat-chip {% if not cat %}active{% endif %}">Semua</a>
+    {% for c in categories %}
+    <a href="{{ url_for('index', cat=c, sort=sort) }}" class="cat-chip {% if cat==c %}active{% endif %}">{{ c.capitalize() }}</a>
+    {% endfor %}
+  </div>
+
+  <!-- Featured -->
+  {% if featured and not cat %}
+  <div class="featured-section">
+    <div class="section-label">⭐ Featured</div>
+    <div class="featured-grid">
+      {% for v in featured[:3] %}
+      <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
+        <div class="video-thumb">
+          {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
+          {% else %}<div class="thumb-placeholder">▶</div>{% endif %}
+          <div class="thumb-overlay"><div class="play-btn-circle"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div></div>
+          <span class="video-badge badge-featured">⭐ Featured</span>
+          {% if v.duration %}<span class="video-duration">{% set m=(v.duration//60)|int %}{% set s=(v.duration%60)|int %}{{ '%d:%02d'|format(m,s) }}</span>{% endif %}
+        </div>
+        <div class="video-info">
+          <div class="video-title">{{ v.title }}</div>
+          <div class="video-meta">{{ v.views or 0 }} views · {{ v.uploader_name or 'Anonymous' }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Sort filter -->
+  <div class="filter-bar">
+    <span style="font-size:.8rem;color:var(--muted);font-weight:600">Urutkan:</span>
+    <a href="{{ url_for('index', sort='terbaru', cat=cat) }}" class="filter-btn {% if sort=='terbaru' %}active{% endif %}">🕐 Terbaru</a>
+    <a href="{{ url_for('index', sort='populer', cat=cat) }}" class="filter-btn {% if sort=='populer' %}active{% endif %}">🔥 Terpopuler</a>
+    <a href="{{ url_for('index', sort='trending', cat=cat) }}" class="filter-btn {% if sort=='trending' %}active{% endif %}">📈 Trending</a>
+  </div>
+
+  <div class="section-label">{{ 'Trending' if sort=='trending' else 'Terpopuler' if sort=='populer' else 'Video Terbaru' }}</div>
   {% if videos %}
   <div class="video-grid">
     {% for v in videos %}
@@ -42,24 +80,24 @@
       <div class="video-thumb">
         {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
         {% else %}<div class="thumb-placeholder">▶</div>{% endif %}
-        <div class="thumb-overlay">
-          <div class="play-btn-circle"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div>
-        </div>
+        <div class="thumb-overlay"><div class="play-btn-circle"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div></div>
+        {% if v.is_trending %}<span class="video-badge badge-trending">📈 Trending</span>{% endif %}
         {% if v.duration %}<span class="video-duration">{% set m=(v.duration//60)|int %}{% set s=(v.duration%60)|int %}{{ '%d:%02d'|format(m,s) }}</span>{% endif %}
       </div>
       <div class="video-info">
         <div class="video-title">{{ v.title }}</div>
-        <div class="video-meta">{{ v.views or 0 }} views · {{ v.uploader_name or "Anonymous" }}</div>
+        <div class="video-meta" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+          <span>{{ v.views or 0 }} views</span>
+          <span>·</span>
+          <a href="{{ url_for('uploader_profile', name=v.uploader_name or 'Anonymous') }}" onclick="event.preventDefault();window.location='/uploader/'+encodeURIComponent('{{ v.uploader_name or 'Anonymous' }}')" style="color:var(--accent2);text-decoration:none">{{ v.uploader_name or 'Anonymous' }}</a>
+          {% if v.category %}<a href="{{ url_for('category', cat=v.category) }}" class="cat-badge" onclick="event.stopPropagation()">{{ v.category }}</a>{% endif %}
+        </div>
       </div>
     </a>
     {% endfor %}
   </div>
   {% else %}
-  <div class="empty-state">
-    <div style="font-size:3rem;margin-bottom:1rem">🎬</div>
-    <h2>Belum ada video</h2>
-    <p>{% if session.get('logged_in') %}<a href="{{ url_for('admin_upload') }}" class="btn btn-primary" style="margin-top:1.25rem">Upload Video Pertama</a>{% else %}Nantikan konten baru.{% endif %}</p>
-  </div>
+  <div class="empty-state"><div style="font-size:3rem;margin-bottom:1rem">🎬</div><h2>Belum ada video</h2></div>
   {% endif %}
 </div>
 {% endblock %}

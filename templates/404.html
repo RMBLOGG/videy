@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}404 — VIDEY{% endblock %}
 {% block content %}
-<div class="empty-state" style="padding-top:7rem">
+<div style="text-align:center;padding:7rem 1.5rem;color:var(--muted)">
   <div style="font-size:5rem;font-weight:800;letter-spacing:-.05em;color:var(--accent2);line-height:1">404</div>
-  <h2 style="margin-top:.5rem">Halaman tidak ditemukan</h2>
-  <p style="margin-top:.3rem">Video atau halaman yang kamu cari tidak ada.</p>
+  <h2 style="font-size:1.3rem;font-weight:700;color:var(--text);margin:.5rem 0 .3rem">Halaman tidak ditemukan</h2>
+  <p>Video atau halaman yang kamu cari tidak ada.</p>
   <a href="{{ url_for('index') }}" class="btn btn-primary" style="margin-top:1.5rem">← Kembali ke Beranda</a>
 </div>
 {% endblock %}

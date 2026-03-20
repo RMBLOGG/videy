@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ name }} — VIDEY{% endblock %}
+{% block content %}
+<div class="container">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.75rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
+    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.75rem;font-weight:800;color:#fff;flex-shrink:0">{{ (name or 'A')[0].upper() }}</div>
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:800;letter-spacing:-.03em">{{ name }}</h1>
+      <p style="color:var(--muted2);font-size:.875rem;margin-top:.2rem">{{ videos|length }} video · {{ total_views }} total views</p>
+    </div>
+  </div>
+  {% if videos %}
+  <div class="section-label">Video dari {{ name }}</div>
+  <div class="video-grid">
+    {% for v in videos %}
+    <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
+      <div class="video-thumb">
+        {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
+        {% else %}<div class="thumb-placeholder">▶</div>{% endif %}
+        <div class="thumb-overlay"><div class="play-btn-circle"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div></div>
+        {% if v.duration %}<span class="video-duration">{% set m=(v.duration//60)|int %}{% set s=(v.duration%60)|int %}{{ '%d:%02d'|format(m,s) }}</span>{% endif %}
+      </div>
+      <div class="video-info">
+        <div class="video-title">{{ v.title }}</div>
+        <div class="video-meta">{{ v.views or 0 }} views · {{ format_wib(v.created_at) }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><h2>Belum ada video</h2></div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{{ cat.capitalize() }} — VIDEY{% endblock %}
+{% block content %}
+<div class="container">
+  <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1.5rem;flex-wrap:wrap">
+    <a href="{{ url_for('index') }}" class="btn btn-ghost btn-sm">← Beranda</a>
+    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em">{{ cat.capitalize() }}</h1>
+    <span style="color:var(--muted);font-size:.875rem">{{ videos|length }} video</span>
+  </div>
+  {% if videos %}
+  <div class="video-grid">
+    {% for v in videos %}
+    <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
+      <div class="video-thumb">
+        {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
+        {% else %}<div class="thumb-placeholder">▶</div>{% endif %}
+        <div class="thumb-overlay"><div class="play-btn-circle"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div></div>
+        {% if v.duration %}<span class="video-duration">{% set m=(v.duration//60)|int %}{% set s=(v.duration%60)|int %}{{ '%d:%02d'|format(m,s) }}</span>{% endif %}
+      </div>
+      <div class="video-info">
+        <div class="video-title">{{ v.title }}</div>
+        <div class="video-meta">{{ v.views or 0 }} views · {{ v.uploader_name or 'Anonymous' }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><div style="font-size:3rem;margin-bottom:1rem">📂</div><h2>Belum ada video di kategori ini</h2></div>
+  {% endif %}
+</div>
+{% endblock %}

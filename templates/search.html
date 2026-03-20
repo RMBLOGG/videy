@@ -2,10 +2,21 @@
 {% block title %}Cari "{{ query }}" — VIDEY{% endblock %}
 {% block content %}
 <div class="container">
-  <h2 style="font-size:1.3rem;font-weight:700;letter-spacing:-.025em;margin-bottom:1.25rem">
-    {% if query %}Hasil untuk "<span style="color:var(--accent2)">{{ query }}</span>" <span style="font-size:.9rem;color:var(--muted);font-weight:400">— {{ videos|length }} video</span>
-    {% else %}Ketik sesuatu untuk mencari{% endif %}
-  </h2>
+  <div style="margin-bottom:1.25rem;display:flex;align-items:center;gap:.875rem;flex-wrap:wrap">
+    <h2 style="font-size:1.2rem;font-weight:700;letter-spacing:-.025em">
+      {% if query %}Hasil untuk "<span style="color:var(--accent2)">{{ query }}</span>"
+      <span style="font-size:.875rem;color:var(--muted);font-weight:400">— {{ videos|length }} video</span>{% else %}Ketik sesuatu untuk mencari{% endif %}
+    </h2>
+  </div>
+  <!-- Category filter -->
+  {% if query %}
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem">
+    <a href="{{ url_for('search', q=query) }}" class="filter-btn {% if not cat %}active{% endif %}" style="padding:.3rem .75rem;border-radius:99px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);background:var(--surface)">Semua</a>
+    {% for c in categories %}
+    <a href="{{ url_for('search', q=query, cat=c) }}" class="cat-chip {% if cat==c %}active{% endif %}">{{ c.capitalize() }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
   {% if videos %}
   <div class="video-grid">
     {% for v in videos %}
@@ -17,7 +28,7 @@
       </div>
       <div class="video-info">
         <div class="video-title">{{ v.title }}</div>
-        <div class="video-meta">{{ v.views or 0 }} views · {{ v.uploader_name or "Anonymous" }}</div>
+        <div class="video-meta">{{ v.views or 0 }} views · {{ v.uploader_name or 'Anonymous' }}</div>
       </div>
     </a>
     {% endfor %}
