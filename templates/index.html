@@ -89,7 +89,7 @@
         <div class="video-meta" style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
           <span>{{ v.views or 0 }} views</span>
           <span>·</span>
-          <a href="{{ url_for('uploader_profile', name=v.uploader_name or 'Anonymous') }}" onclick="event.preventDefault();window.location='/uploader/'+encodeURIComponent('{{ v.uploader_name or 'Anonymous' }}')" style="color:var(--accent2);text-decoration:none">{{ v.uploader_name or 'Anonymous' }}</a>
+          <a href="/uploader/{{ v.uploader_name or 'Anonymous' }}" onclick="event.stopPropagation()" style="color:var(--accent2);text-decoration:none">{{ v.uploader_name or 'Anonymous' }}</a>
           {% if v.category %}<a href="{{ url_for('category', cat=v.category) }}" class="cat-badge" onclick="event.stopPropagation()">{{ v.category }}</a>{% endif %}
         </div>
       </div>
