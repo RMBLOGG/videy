@@ -2,46 +2,47 @@
 {% block title %}Kelola Video — VIDEY Admin{% endblock %}
 {% block head %}
 <style>
-  .admin-page{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem}
-  .admin-nav{display:flex;gap:.375rem;flex-wrap:wrap;margin-bottom:1.5rem}
-  .admin-nav a{padding:.4rem .875rem;border-radius:99px;font-size:.82rem;font-weight:600;text-decoration:none;color:var(--muted2);border:1px solid var(--border);background:var(--surface);transition:all .2s}
+  .admin-page{max-width:1200px;margin:0 auto;padding:1.25rem 1rem}
+  .admin-nav{display:flex;gap:.35rem;overflow-x:auto;margin-bottom:1.25rem;padding-bottom:.25rem;scrollbar-width:none}
+  .admin-nav::-webkit-scrollbar{display:none}
+  .admin-nav a{padding:.38rem .8rem;border-radius:99px;font-size:.78rem;font-weight:600;text-decoration:none;color:var(--muted2);border:1px solid var(--border);background:var(--surface);transition:all .2s;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:.35rem}
   .admin-nav a:hover,.admin-nav a.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem}
-  .filter-btns{display:flex;gap:.375rem;flex-wrap:wrap}
-  .flt{padding:.35rem .8rem;border-radius:99px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);background:var(--surface);transition:all .2s}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem}
+  .filter-btns{display:flex;gap:.3rem;flex-wrap:wrap}
+  .flt{padding:.3rem .7rem;border-radius:99px;font-size:.75rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);background:var(--surface);transition:all .2s}
   .flt:hover,.flt.active{background:var(--accent);color:#fff;border-color:var(--accent)}
   .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
   .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  table{width:100%;border-collapse:collapse;min-width:700px}
-  th{text-align:left;padding:.75rem 1rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
-  td{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.875rem;vertical-align:middle}
+  table{width:100%;border-collapse:collapse;min-width:650px}
+  th{text-align:left;padding:.7rem .875rem;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:.7rem .875rem;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:middle}
   tr:last-child td{border-bottom:none}
   tbody tr:hover td{background:rgba(255,255,255,.02)}
-  .status-badge{padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:700}
+  .status-badge{padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:700}
   .s-approved{background:rgba(74,222,128,.15);color:var(--green)}
   .s-pending{background:rgba(251,191,36,.15);color:var(--yellow)}
   .s-rejected{background:rgba(255,77,109,.15);color:var(--red)}
-  .thumb-cell{width:72px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:var(--surface2);flex-shrink:0}
+  .thumb-cell{width:64px;aspect-ratio:16/9;border-radius:5px;overflow:hidden;background:var(--surface2);flex-shrink:0}
   .thumb-cell img{width:100%;height:100%;object-fit:cover}
-  .title-cell{display:flex;align-items:center;gap:.75rem}
-  .title-txt{font-weight:600;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .actions{display:flex;gap:.3rem;flex-wrap:nowrap}
-  .bulk-bar{display:none;background:rgba(108,99,255,.1);border:1px solid var(--accent);border-radius:var(--r);padding:.75rem 1.25rem;margin-bottom:1rem;align-items:center;gap:.75rem;flex-wrap:wrap}
+  .title-cell{display:flex;align-items:center;gap:.625rem}
+  .title-txt{font-weight:600;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .actions{display:flex;gap:.25rem;flex-wrap:nowrap}
+  .bulk-bar{display:none;background:rgba(108,99,255,.1);border:1px solid var(--accent);border-radius:var(--r);padding:.625rem 1rem;margin-bottom:.875rem;align-items:center;gap:.625rem;flex-wrap:wrap}
   .bulk-bar.show{display:flex}
 </style>
 {% endblock %}
 {% block content %}
 <div class="admin-page">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem">
-    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em">Kelola Video</h1>
-    <a href="{{ url_for('admin_upload') }}" class="btn btn-primary btn-sm">+ Upload</a>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem">
+    <h1 style="font-size:1.4rem;font-weight:800;letter-spacing:-.03em">Kelola Video</h1>
+    <a href="{{ url_for('admin_upload') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Upload</a>
   </div>
   <div class="admin-nav">
-    <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-    <a href="{{ url_for('admin_videos') }}" class="active">Semua Video</a>
-    <a href="{{ url_for('admin_reports') }}">Laporan</a>
-    <a href="{{ url_for('admin_blacklist') }}">Blacklist</a>
-    <a href="{{ url_for('admin_comments') }}">Komentar</a>
+    <a href="{{ url_for('admin_dashboard') }}"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="{{ url_for('admin_videos') }}" class="active"><i class="fa fa-film"></i> Video</a>
+    <a href="{{ url_for('admin_reports') }}"><i class="fa fa-flag"></i> Laporan</a>
+    <a href="{{ url_for('admin_blacklist') }}"><i class="fa fa-ban"></i> Blacklist</a>
+    <a href="{{ url_for('admin_comments') }}"><i class="fa fa-comment"></i> Komentar</a>
   </div>
   <div class="toolbar">
     <div class="filter-btns">
@@ -50,16 +51,14 @@
       <a href="{{ url_for('admin_videos', status='pending') }}" class="flt {% if status_filter=='pending' %}active{% endif %}">Pending</a>
       <a href="{{ url_for('admin_videos', status='rejected') }}" class="flt {% if status_filter=='rejected' %}active{% endif %}">Rejected</a>
     </div>
-    <span style="font-size:.82rem;color:var(--muted)">{{ videos|length }} video</span>
+    <span style="font-size:.78rem;color:var(--muted)">{{ videos|length }} video</span>
   </div>
-
-  <form method="POST" action="{{ url_for('bulk_delete') }}" id="bulkForm" onsubmit="return confirm('Hapus '+document.querySelectorAll('.vchk:checked').length+' video?')">
+  <form method="POST" action="{{ url_for('bulk_delete') }}" id="bulkForm" onsubmit="return confirm('Hapus video yang dipilih?')">
     <div class="bulk-bar" id="bulkBar">
       <span id="bulkCount" style="font-size:.875rem;font-weight:600;color:var(--accent2)">0 dipilih</span>
-      <button type="submit" class="btn btn-danger btn-sm">🗑 Hapus yang dipilih</button>
+      <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Hapus</button>
       <button type="button" class="btn btn-ghost btn-sm" onclick="clearAll()">Batal</button>
     </div>
-
     <div class="table-card">
       <div class="table-scroll">
         <table>
@@ -75,30 +74,30 @@
               <td><input type="checkbox" name="video_ids" value="{{ v.id }}" class="vchk" onchange="updateBulk()"/></td>
               <td>
                 <div class="title-cell">
-                  <div class="thumb-cell">{% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt=""/>{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">▶</div>{% endif %}</div>
+                  <div class="thumb-cell">{% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt=""/>{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)"><i class="fa fa-film"></i></div>{% endif %}</div>
                   <div>
                     <a href="{{ url_for('watch', video_id=v.id) }}" class="title-txt" style="color:var(--text);text-decoration:none;display:block" target="_blank">{{ v.title }}</a>
-                    <div style="display:flex;gap:.3rem;margin-top:.2rem">
-                      {% if v.is_featured %}<span style="font-size:.65rem;background:rgba(251,191,36,.2);color:var(--yellow);padding:1px 6px;border-radius:4px">⭐ Featured</span>{% endif %}
-                      {% if v.is_trending %}<span style="font-size:.65rem;background:rgba(255,77,109,.15);color:var(--red);padding:1px 6px;border-radius:4px">📈 Trending</span>{% endif %}
+                    <div style="display:flex;gap:.25rem;margin-top:.15rem">
+                      {% if v.is_featured %}<span style="font-size:.6rem;background:rgba(251,191,36,.2);color:var(--yellow);padding:1px 5px;border-radius:3px"><i class="fa fa-star"></i></span>{% endif %}
+                      {% if v.is_trending %}<span style="font-size:.6rem;background:rgba(255,77,109,.15);color:var(--red);padding:1px 5px;border-radius:3px"><i class="fa fa-chart-line"></i></span>{% endif %}
                     </div>
                   </div>
                 </div>
               </td>
               <td><span class="status-badge s-{{ v.status }}">{{ v.status }}</span></td>
               <td style="color:var(--muted2)">{{ v.views or 0 }}</td>
-              <td style="color:var(--muted2);font-size:.8rem">{{ v.uploader_name or 'Anonymous' }}</td>
-              <td style="color:var(--muted2);font-size:.75rem;font-family:var(--mono)">{{ format_wib(v.created_at) }}</td>
+              <td style="color:var(--muted2);font-size:.78rem">{{ v.uploader_name or 'Anonymous' }}</td>
+              <td style="color:var(--muted2);font-size:.72rem;font-family:var(--mono);white-space:nowrap">{{ format_wib(v.created_at) }}</td>
               <td>
                 <div class="actions">
                   {% if v.status == 'pending' %}
-                  <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='approve') }}"><button type="submit" class="btn btn-success btn-xs" title="Approve">✓</button></form>
-                  <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='reject') }}"><button type="submit" class="btn btn-danger btn-xs" title="Reject">✕</button></form>
+                  <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='approve') }}"><button type="submit" class="btn btn-success btn-xs"><i class="fa fa-check"></i></button></form>
+                  <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='reject') }}"><button type="submit" class="btn btn-danger btn-xs"><i class="fa fa-times"></i></button></form>
                   {% elif v.status == 'rejected' %}
-                  <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='approve') }}"><button type="submit" class="btn btn-success btn-xs">↩ Approve</button></form>
+                  <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='approve') }}"><button type="submit" class="btn btn-success btn-xs"><i class="fa fa-undo"></i></button></form>
                   {% endif %}
-                  <a href="{{ url_for('admin_edit', video_id=v.id) }}" class="btn btn-ghost btn-xs">Edit</a>
-                  <form method="POST" action="{{ url_for('admin_delete', video_id=v.id) }}" onsubmit="return confirm('Hapus?')"><button type="submit" class="btn btn-danger btn-xs">🗑</button></form>
+                  <a href="{{ url_for('admin_edit', video_id=v.id) }}" class="btn btn-ghost btn-xs"><i class="fa fa-pen"></i></a>
+                  <form method="POST" action="{{ url_for('admin_delete', video_id=v.id) }}" onsubmit="return confirm('Hapus?')"><button type="submit" class="btn btn-danger btn-xs"><i class="fa fa-trash"></i></button></form>
                 </div>
               </td>
             </tr>

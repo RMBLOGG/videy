@@ -2,35 +2,42 @@
 {% block title %}Dashboard Admin — VIDEY{% endblock %}
 {% block head %}
 <style>
-  .admin-page{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem}
-  .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
-  .admin-header h1{font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
-  .admin-nav{display:flex;gap:.375rem;flex-wrap:wrap;margin-bottom:1.5rem}
-  .admin-nav a{padding:.4rem .875rem;border-radius:99px;font-size:.82rem;font-weight:600;text-decoration:none;color:var(--muted2);border:1px solid var(--border);background:var(--surface);transition:all .2s}
+  .admin-page{max-width:1200px;margin:0 auto;padding:1.25rem 1rem}
+  .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+  .admin-header h1{font-size:1.4rem;font-weight:800;letter-spacing:-.03em}
+
+  /* Admin nav — scrollable on mobile */
+  .admin-nav{display:flex;gap:.35rem;overflow-x:auto;margin-bottom:1.25rem;padding-bottom:.25rem;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .admin-nav::-webkit-scrollbar{display:none}
+  .admin-nav a{padding:.38rem .8rem;border-radius:99px;font-size:.78rem;font-weight:600;text-decoration:none;color:var(--muted2);border:1px solid var(--border);background:var(--surface);transition:all .2s;white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:.35rem}
   .admin-nav a:hover,.admin-nav a.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.875rem;margin-bottom:1.5rem}
-  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem 1.25rem}
-  .stat .val{font-size:1.8rem;font-weight:800;letter-spacing:-.03em;line-height:1}
-  .stat .lbl{font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.625rem;margin-bottom:1.25rem}
+  @media(max-width:400px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.875rem 1rem}
+  .stat .val{font-size:1.6rem;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .stat .lbl{font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:.25rem}
   .stat.accent .val{color:var(--accent2)}
   .stat.green .val{color:var(--green)}
   .stat.yellow .val{color:var(--yellow)}
   .stat.red .val{color:var(--red)}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
-  @media(max-width:700px){.grid-2{grid-template-columns:1fr}}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media(max-width:640px){.grid-2{grid-template-columns:1fr}}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-  .card-header{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
-  .pending-item{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.875rem}
+  .card-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+  .card-header a{color:var(--accent2);text-decoration:none;font-size:.72rem}
+  .pending-item{padding:.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem}
   .pending-item:last-child{border-bottom:none}
-  .pending-thumb{width:72px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:var(--surface2);flex-shrink:0}
+  .pending-thumb{width:64px;aspect-ratio:16/9;border-radius:5px;overflow:hidden;background:var(--surface2);flex-shrink:0}
   .pending-thumb img{width:100%;height:100%;object-fit:cover}
   .pending-info{flex:1;min-width:0}
-  .pending-title{font-weight:600;font-size:.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pending-meta{font-size:.75rem;color:var(--muted2);margin-top:.2rem}
-  .pending-actions{display:flex;gap:.375rem;flex-shrink:0}
-  .top-item{padding:.75rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem}
+  .pending-title{font-weight:600;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pending-meta{font-size:.7rem;color:var(--muted2);margin-top:.15rem}
+  .pending-actions{display:flex;gap:.3rem;flex-shrink:0}
+  .top-item{padding:.625rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.625rem}
   .top-item:last-child{border-bottom:none}
-  .top-rank{width:24px;height:24px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--muted);flex-shrink:0}
+  .top-rank{width:22px;height:22px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:var(--muted);flex-shrink:0}
   .top-rank.gold{background:rgba(251,191,36,.2);color:var(--yellow)}
 </style>
 {% endblock %}
@@ -38,16 +45,16 @@
 <div class="admin-page">
   <div class="admin-header">
     <h1>Dashboard Admin</h1>
-    <a href="{{ url_for('admin_upload') }}" class="btn btn-primary">+ Upload Video</a>
+    <a href="{{ url_for('admin_upload') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Upload Video</a>
   </div>
 
   <div class="admin-nav">
-    <a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a>
-    <a href="{{ url_for('admin_videos') }}">Semua Video</a>
-    <a href="{{ url_for('admin_videos', status='pending') }}">Pending {% if stats.pending > 0 %}<span style="background:var(--red);color:#fff;border-radius:99px;padding:0 6px;font-size:.7rem;margin-left:2px">{{ stats.pending }}</span>{% endif %}</a>
-    <a href="{{ url_for('admin_reports') }}">Laporan {% if stats.reports > 0 %}<span style="background:var(--red);color:#fff;border-radius:99px;padding:0 6px;font-size:.7rem;margin-left:2px">{{ stats.reports }}</span>{% endif %}</a>
-    <a href="{{ url_for('admin_blacklist') }}">Blacklist</a>
-    <a href="{{ url_for('admin_comments') }}">Komentar</a>
+    <a href="{{ url_for('admin_dashboard') }}" class="active"><i class="fa fa-gauge"></i> Dashboard</a>
+    <a href="{{ url_for('admin_videos') }}"><i class="fa fa-film"></i> Video</a>
+    <a href="{{ url_for('admin_videos', status='pending') }}"><i class="fa fa-clock"></i> Pending {% if stats.pending > 0 %}<span style="background:var(--red);color:#fff;border-radius:99px;padding:0 5px;font-size:.65rem">{{ stats.pending }}</span>{% endif %}</a>
+    <a href="{{ url_for('admin_reports') }}"><i class="fa fa-flag"></i> Laporan {% if stats.reports > 0 %}<span style="background:var(--red);color:#fff;border-radius:99px;padding:0 5px;font-size:.65rem">{{ stats.reports }}</span>{% endif %}</a>
+    <a href="{{ url_for('admin_blacklist') }}"><i class="fa fa-ban"></i> Blacklist</a>
+    <a href="{{ url_for('admin_comments') }}"><i class="fa fa-comment"></i> Komentar</a>
   </div>
 
   <div class="stats">
@@ -60,35 +67,32 @@
   </div>
 
   <div class="grid-2">
-    <!-- Pending -->
     <div class="card">
-      <div class="card-header">⏳ Menunggu Review <a href="{{ url_for('admin_videos', status='pending') }}" style="color:var(--accent2);text-decoration:none;font-size:.75rem">Lihat semua</a></div>
+      <div class="card-header"><span><i class="fa fa-clock"></i> Menunggu Review</span> <a href="{{ url_for('admin_videos', status='pending') }}">Lihat semua</a></div>
       {% for v in pending[:5] %}
       <div class="pending-item">
-        <div class="pending-thumb">{% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt=""/>{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">▶</div>{% endif %}</div>
+        <div class="pending-thumb">{% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt=""/>{% else %}<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)"><i class="fa fa-film"></i></div>{% endif %}</div>
         <div class="pending-info">
           <div class="pending-title">{{ v.title }}</div>
           <div class="pending-meta">{{ v.uploader_name or 'Anonymous' }} · {{ format_wib(v.created_at) }}</div>
         </div>
         <div class="pending-actions">
-          <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='approve') }}"><button type="submit" class="btn btn-success btn-xs">✓</button></form>
-          <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='reject') }}"><button type="submit" class="btn btn-danger btn-xs">✕</button></form>
+          <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='approve') }}"><button type="submit" class="btn btn-success btn-xs"><i class="fa fa-check"></i></button></form>
+          <form method="POST" action="{{ url_for('moderate', video_id=v.id, action='reject') }}"><button type="submit" class="btn btn-danger btn-xs"><i class="fa fa-times"></i></button></form>
         </div>
       </div>
       {% else %}
-      <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.875rem">Tidak ada video pending ✅</div>
+      <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.875rem"><i class="fa fa-check-circle" style="color:var(--green)"></i> Tidak ada video pending</div>
       {% endfor %}
     </div>
-
-    <!-- Top Videos -->
     <div class="card">
-      <div class="card-header">🔥 Video Terpopuler</div>
+      <div class="card-header"><i class="fa fa-fire" style="color:var(--red)"></i> Video Terpopuler</div>
       {% for v in top_videos %}
       <div class="top-item">
         <div class="top-rank {% if loop.index==1 %}gold{% endif %}">{{ loop.index }}</div>
         <div style="flex:1;min-width:0">
-          <a href="{{ url_for('watch', video_id=v.id) }}" style="font-weight:600;font-size:.875rem;color:var(--text);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" target="_blank">{{ v.title }}</a>
-          <div style="font-size:.72rem;color:var(--muted2)">{{ v.views or 0 }} views</div>
+          <a href="{{ url_for('watch', video_id=v.id) }}" style="font-weight:600;font-size:.82rem;color:var(--text);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block" target="_blank">{{ v.title }}</a>
+          <div style="font-size:.7rem;color:var(--muted2)"><i class="fa fa-eye"></i> {{ v.views or 0 }}</div>
         </div>
       </div>
       {% else %}
