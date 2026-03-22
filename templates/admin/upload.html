@@ -77,7 +77,20 @@
 const CLOUD_NAME = "dzfkklsza";
 const UPLOAD_PRESET = "videy_unsigned";
 
-document.getElementById('vidInput').addEventListener('change',function(){ document.getElementById('vidName').textContent=this.files[0]?.name||''; });
+document.getElementById('vidInput').addEventListener('change',function(){
+  const file=this.files[0];
+  if(!file) return;
+  document.getElementById('vidName').textContent=file.name;
+  const titleInput=document.getElementById('title');
+  if(!titleInput.value.trim()){
+    let name=file.name.replace(/\.[^/.]+$/,'');
+    name=name.replace(/[_\-\.]+/g,' ').trim();
+    name=name.replace(/\s+/g,' ');
+    name=name.charAt(0).toUpperCase()+name.slice(1);
+    titleInput.value=name;
+    titleInput.dispatchEvent(new Event('input'));
+  }
+});
 document.getElementById('thumbInput').addEventListener('change',function(){ document.getElementById('thumbName').textContent=this.files[0]?.name||''; });
 ['vidDrop','thumbDrop'].forEach(id=>{
   const el=document.getElementById(id);
