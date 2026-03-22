@@ -1,22 +1,55 @@
 {% extends 'base.html' %}
 {% block title %}Cari "{{ query }}" — VIDEY{% endblock %}
+{% block head %}
+<style>
+  .search-header{margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+  .search-title{font-size:1.2rem;font-weight:700;letter-spacing:-.025em}
+  /* Category dropdown */
+  .cat-dropdown-wrap{position:relative;display:inline-block}
+  .cat-dropdown-btn{display:flex;align-items:center;gap:.5rem;padding:.38rem .9rem;border-radius:99px;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+  .cat-dropdown-btn:hover,.cat-dropdown-btn.open{border-color:var(--accent);color:var(--accent2)}
+  .cat-dropdown-btn i.arrow{font-size:.65rem;transition:transform .2s;color:var(--muted)}
+  .cat-dropdown-btn.open i.arrow{transform:rotate(180deg)}
+  .cat-dropdown-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;min-width:180px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:.4rem;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:400;animation:dropIn .15s ease}
+  .cat-dropdown-menu.open{display:block}
+  @keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .cat-dropdown-item{display:block;padding:.48rem .75rem;border-radius:9px;color:var(--muted2);text-decoration:none;font-size:.83rem;font-weight:500;transition:all .15s}
+  .cat-dropdown-item:hover{background:var(--surface);color:var(--text)}
+  .cat-dropdown-item.active{background:rgba(108,99,255,.15);color:var(--accent2);font-weight:700}
+  .cat-dropdown-divider{height:1px;background:var(--border);margin:.3rem 0}
+</style>
+{% endblock %}
 {% block content %}
 <div class="container">
-  <div style="margin-bottom:1.25rem;display:flex;align-items:center;gap:.875rem;flex-wrap:wrap">
-    <h2 style="font-size:1.2rem;font-weight:700;letter-spacing:-.025em">
+  <div class="search-header">
+    <h2 class="search-title">
       {% if query %}Hasil untuk "<span style="color:var(--accent2)">{{ query }}</span>"
       <span style="font-size:.875rem;color:var(--muted);font-weight:400">— {{ videos|length }} video</span>{% else %}Ketik sesuatu untuk mencari{% endif %}
     </h2>
+
+    <!-- Category dropdown -->
+    {% if query %}
+    <div class="cat-dropdown-wrap" id="catDropWrap">
+      <button class="cat-dropdown-btn {% if cat %}open{% endif %}" id="catDropBtn" onclick="toggleCatDrop()">
+        <i class="fa fa-filter" style="font-size:.7rem"></i>
+        {{ cat.capitalize() if cat else 'Semua Kategori' }}
+        <i class="fa fa-chevron-down arrow"></i>
+      </button>
+      <div class="cat-dropdown-menu {% if cat %}open{% endif %}" id="catDropMenu">
+        <a href="{{ url_for('search', q=query) }}" class="cat-dropdown-item {% if not cat %}active{% endif %}">
+          Semua Kategori
+        </a>
+        <div class="cat-dropdown-divider"></div>
+        {% for c in categories %}
+        <a href="{{ url_for('search', q=query, cat=c) }}" class="cat-dropdown-item {% if cat==c %}active{% endif %}">
+          {{ c.capitalize() }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
   </div>
-  <!-- Category filter -->
-  {% if query %}
-  <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem">
-    <a href="{{ url_for('search', q=query) }}" class="filter-btn {% if not cat %}active{% endif %}" style="padding:.3rem .75rem;border-radius:99px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);background:var(--surface)">Semua</a>
-    {% for c in categories %}
-    <a href="{{ url_for('search', q=query, cat=c) }}" class="cat-chip {% if cat==c %}active{% endif %}">{{ c.capitalize() }}</a>
-    {% endfor %}
-  </div>
-  {% endif %}
+
   {% if videos %}
   <div class="video-grid">
     {% for v in videos %}
@@ -37,4 +70,19 @@
   <div class="empty-state"><div style="font-size:3rem;margin-bottom:1rem">🔍</div><h2>Tidak ada hasil</h2><p>Coba kata kunci lain.</p></div>
   {% endif %}
 </div>
+<script>
+function toggleCatDrop(){
+  const btn=document.getElementById('catDropBtn');
+  const menu=document.getElementById('catDropMenu');
+  btn.classList.toggle('open');
+  menu.classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  const wrap=document.getElementById('catDropWrap');
+  if(wrap&&!wrap.contains(e.target)){
+    document.getElementById('catDropBtn')?.classList.remove('open');
+    document.getElementById('catDropMenu')?.classList.remove('open');
+  }
+});
+</script>
 {% endblock %}
