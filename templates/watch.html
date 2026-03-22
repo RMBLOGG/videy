@@ -15,7 +15,7 @@
   .react-btn:hover{border-color:var(--accent)}
   .react-btn.liked{background:rgba(108,99,255,.15);border-color:var(--accent);color:var(--accent2)}
   .react-btn.disliked{background:rgba(255,77,109,.12);border-color:var(--red);color:var(--red)}
-  .share-btns{display:flex;gap:.35rem;flex-wrap:wrap;margin-left:auto}
+  .share-btns{display:contents}
   .share-btn{padding:.38rem .75rem;border-radius:99px;font-size:.72rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);background:var(--surface);cursor:pointer;font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:.3rem}
   .share-btn:hover{border-color:var(--accent2);color:var(--text)}
   .video-desc{margin-top:.875rem;font-size:.875rem;color:var(--muted2);line-height:1.7;background:var(--surface);border-radius:var(--r2);padding:.875rem 1rem}
@@ -86,17 +86,15 @@
           <a class="share-btn" href="https://twitter.com/intent/tweet?text={{ video.title|urlencode }}&url={{ request.url|urlencode }}" target="_blank"><i class="fab fa-x-twitter"></i></a>
           <button class="share-btn" onclick="copyLink()"><i class="fa fa-link"></i> Salin</button>
         </div>
-      </div>
-      {% if video.description %}<div class="video-desc">{{ video.description }}</div>{% endif %}
-      {% if video.tags %}<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">{% for tag in video.tags.split(',') %}{% if tag.strip() %}<span style="font-size:.7rem;padding:2px 7px;border-radius:99px;background:var(--surface2);color:var(--muted2);border:1px solid var(--border)">#{{ tag.strip() }}</span>{% endif %}{% endfor %}</div>{% endif %}
-      {% if session.get('logged_in') %}
-      <div class="admin-bar">
+        {% if session.get('logged_in') %}
         <a href="{{ url_for('admin_edit', video_id=video.id) }}" class="btn btn-ghost btn-sm"><i class="fa fa-pen"></i> Edit</a>
         <form method="POST" action="{{ url_for('admin_delete', video_id=video.id) }}" onsubmit="return confirm('Hapus video ini?')">
           <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Hapus</button>
         </form>
+        {% endif %}
       </div>
-      {% endif %}
+      {% if video.description %}<div class="video-desc">{{ video.description }}</div>{% endif %}
+      {% if video.tags %}<div style="margin-top:.5rem;display:flex;gap:.3rem;flex-wrap:wrap">{% for tag in video.tags.split(',') %}{% if tag.strip() %}<span style="font-size:.7rem;padding:2px 7px;border-radius:99px;background:var(--surface2);color:var(--muted2);border:1px solid var(--border)">#{{ tag.strip() }}</span>{% endif %}{% endfor %}</div>{% endif %}
       <div class="embed-box">
         <div class="embed-tabs">
           <button class="embed-tab active" onclick="switchTab(this,'link')"><i class="fa fa-link"></i> Link</button>
