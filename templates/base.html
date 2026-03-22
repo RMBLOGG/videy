@@ -74,6 +74,26 @@
       .mobile-search-btn{display:none !important}
     }
 
+    /* ── ADMIN HAMBURGER ── */
+    .admin-hamburger{position:relative;display:inline-flex}
+    .admin-hamburger-btn{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--muted2);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+    .admin-hamburger-btn:hover,.admin-hamburger-btn.open{border-color:var(--accent);color:var(--accent);background:rgba(108,99,255,.08)}
+    .admin-dropdown{display:none;position:absolute;top:calc(100% + 10px);right:0;min-width:200px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:.4rem;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:500;animation:dropIn .15s ease}
+    .admin-dropdown.open{display:block}
+    @keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+    .admin-dropdown-search{display:flex;align-items:center;gap:.4rem;padding:.45rem .6rem;margin-bottom:.3rem;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+    .admin-dropdown-search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:.82rem}
+    .admin-dropdown-search input::placeholder{color:var(--muted)}
+    .admin-dropdown-search button{background:var(--accent);border:none;color:#fff;border-radius:7px;padding:.2rem .55rem;cursor:pointer;font-size:.75rem}
+    .admin-dropdown-divider{height:1px;background:var(--border);margin:.3rem 0}
+    .admin-dropdown-item{display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;border-radius:9px;color:var(--muted2);text-decoration:none;font-size:.85rem;font-weight:500;transition:all .15s;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+    .admin-dropdown-item:hover{background:var(--surface);color:var(--text)}
+    .admin-dropdown-item.accent{color:var(--accent2)}
+    .admin-dropdown-item.accent:hover{background:rgba(108,99,255,.1)}
+    .admin-dropdown-item.danger{color:#f87171}
+    .admin-dropdown-item.danger:hover{background:rgba(248,113,113,.1)}
+    .admin-dropdown-item i{width:16px;text-align:center;font-size:.8rem}
+
     /* ── FLASH ── */
     .flash-wrap{max-width:1280px;margin:.75rem auto;padding:0 1rem}
     .flash{padding:.65rem .875rem;border-radius:var(--r2);font-size:.875rem;display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;font-weight:500}
@@ -152,19 +172,46 @@
   <div class="nav-spacer"></div>
 
   <div class="nav-actions">
-    <!-- Mobile search toggle -->
-    <button class="nav-icon-btn mobile-search-btn" onclick="toggleSearch()" title="Cari">
-      <i class="fa fa-search"></i>
-    </button>
-    <!-- Theme toggle -->
-    <button class="nav-icon-btn" onclick="toggleTheme()" id="themeBtn" title="Ganti tema">
-      <i class="fa fa-moon" id="themeIcon"></i>
-    </button>
     {% if session.get('logged_in') %}
-      <a href="{{ url_for('admin_upload') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Upload</a>
-      <a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a>
-      <a href="{{ url_for('admin_logout') }}" class="nav-link">Keluar</a>
+      <!-- Admin: hamburger dropdown -->
+      <div class="admin-hamburger" id="adminHamburger">
+        <button class="admin-hamburger-btn" id="adminHamBtn" onclick="toggleAdminMenu()" title="Menu Admin">
+          <i class="fa fa-bars" id="adminHamIcon"></i>
+        </button>
+        <div class="admin-dropdown" id="adminDropdown">
+          <!-- Search -->
+          <form class="admin-dropdown-search" action="{{ url_for('search') }}" method="get">
+            <i class="fa fa-search" style="color:var(--muted);font-size:.75rem"></i>
+            <input type="text" name="q" placeholder="Cari video..." autocomplete="off"/>
+            <button type="submit"><i class="fa fa-arrow-right"></i></button>
+          </form>
+          <div class="admin-dropdown-divider"></div>
+          <!-- Theme toggle -->
+          <button class="admin-dropdown-item" onclick="toggleTheme();closeAdminMenu()">
+            <i class="fa fa-moon" id="themeIcon"></i> Ganti Tema
+          </button>
+          <div class="admin-dropdown-divider"></div>
+          <a href="{{ url_for('admin_upload') }}" class="admin-dropdown-item accent">
+            <i class="fa fa-plus"></i> Upload Video
+          </a>
+          <a href="{{ url_for('admin_dashboard') }}" class="admin-dropdown-item">
+            <i class="fa fa-tachometer"></i> Dashboard
+          </a>
+          <div class="admin-dropdown-divider"></div>
+          <a href="{{ url_for('admin_logout') }}" class="admin-dropdown-item danger">
+            <i class="fa fa-sign-out"></i> Keluar
+          </a>
+        </div>
+      </div>
     {% else %}
+      <!-- Mobile search toggle -->
+      <button class="nav-icon-btn mobile-search-btn" onclick="toggleSearch()" title="Cari">
+        <i class="fa fa-search"></i>
+      </button>
+      <!-- Theme toggle -->
+      <button class="nav-icon-btn" onclick="toggleTheme()" id="themeBtn" title="Ganti tema">
+        <i class="fa fa-moon" id="themeIcon"></i>
+      </button>
       <a href="{{ url_for('public_upload') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Upload</a>
     {% endif %}
   </div>
@@ -203,6 +250,25 @@ function toggleTheme(){
   document.getElementById('themeIcon').className=isDark?'fa fa-sun':'fa fa-moon';
   localStorage.setItem('theme',isDark?'light':'dark');
 }
+function toggleAdminMenu(){
+  const btn=document.getElementById('adminHamBtn');
+  const dd=document.getElementById('adminDropdown');
+  const icon=document.getElementById('adminHamIcon');
+  const isOpen=dd.classList.contains('open');
+  dd.classList.toggle('open');
+  btn.classList.toggle('open');
+  icon.className=isOpen?'fa fa-bars':'fa fa-times';
+}
+function closeAdminMenu(){
+  const dd=document.getElementById('adminDropdown');
+  const btn=document.getElementById('adminHamBtn');
+  const icon=document.getElementById('adminHamIcon');
+  if(dd){dd.classList.remove('open');btn.classList.remove('open');icon.className='fa fa-bars';}
+}
+document.addEventListener('click',function(e){
+  const ham=document.getElementById('adminHamburger');
+  if(ham&&!ham.contains(e.target))closeAdminMenu();
+});
 (function(){
   const t=localStorage.getItem('theme')||'dark';
   document.documentElement.setAttribute('data-theme',t);
