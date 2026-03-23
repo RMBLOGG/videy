@@ -44,6 +44,32 @@
     {% endfor %}
   </div>
 
+  <!-- Folders -->
+  {% if folders %}
+  {% for folder in folders %}
+  <div style="margin-bottom:1.75rem">
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">
+      <span><i class="fa fa-folder-open" style="color:var(--accent2)"></i> {{ folder.name }}</span>
+      {% if folder.description %}<span style="font-size:.72rem;color:var(--muted2);font-weight:400">{{ folder.description }}</span>{% endif %}
+    </div>
+    <div class="trending-scroll">
+      {% for v in folder.videos %}
+      <a href="{{ url_for('watch', video_id=v.id) }}" class="trending-card">
+        <div class="tc-thumb">
+          {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
+          {% else %}<div class="thumb-placeholder"><i class="fa fa-film"></i></div>{% endif %}
+        </div>
+        <div class="tc-info">
+          <div class="tc-title">{{ v.title }}</div>
+          <div class="tc-meta">{{ v.views or 0 }} views</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
   <!-- Trending -->
   {% set trending_videos = featured | selectattr('is_trending') | list if featured else [] %}
   {% set trending_videos = videos | selectattr('is_trending') | list %}
