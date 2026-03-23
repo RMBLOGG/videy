@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}Kelola Folder — VIDEY Admin{% endblock %}
+{% block head %}
+<style>
+  .admin-page{max-width:900px;margin:0 auto;padding:1.5rem 1.25rem}
+  .page-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+  .page-header h1{font-size:1.4rem;font-weight:800;letter-spacing:-.03em}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1rem}
+  .card-title{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:1rem}
+  /* Create folder form */
+  .create-form{display:flex;gap:.6rem;flex-wrap:wrap}
+  .create-form input{flex:1;min-width:160px;padding:.55rem .9rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font);font-size:.875rem;outline:none;transition:border-color .2s}
+  .create-form input:focus{border-color:var(--accent)}
+  /* Folder list */
+  .folder-item{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem}
+  .folder-item:last-child{margin-bottom:0}
+  .folder-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+  .folder-icon{width:38px;height:38px;border-radius:10px;background:rgba(108,99,255,.15);display:flex;align-items:center;justify-content:center;color:var(--accent2);font-size:1rem;flex-shrink:0}
+  .folder-info{flex:1;min-width:0}
+  .folder-name{font-weight:700;font-size:.95rem;margin-bottom:.1rem}
+  .folder-desc{color:var(--muted2);font-size:.78rem}
+  .folder-count{font-size:.72rem;font-weight:600;padding:.2rem .6rem;border-radius:99px;background:rgba(108,99,255,.12);color:var(--accent2);white-space:nowrap}
+  .folder-actions{display:flex;gap:.4rem;flex-shrink:0}
+  /* Video picker */
+  .video-picker{display:none}
+  .video-picker.open{display:block}
+  .picker-search{width:100%;padding:.5rem .875rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none;margin-bottom:.75rem;box-sizing:border-box}
+  .picker-search:focus{border-color:var(--accent)}
+  .picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;max-height:280px;overflow-y:auto;padding:.25rem}
+  .picker-item{position:relative;border-radius:8px;overflow:hidden;border:2px solid var(--border);cursor:pointer;transition:all .15s;background:var(--surface)}
+  .picker-item:hover{border-color:var(--accent2)}
+  .picker-item.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--glow)}
+  .picker-item input[type=checkbox]{position:absolute;opacity:0;width:0;height:0}
+  .picker-thumb{aspect-ratio:16/9;overflow:hidden;background:var(--surface2)}
+  .picker-thumb img{width:100%;height:100%;object-fit:cover}
+  .picker-thumb .no-thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1.1rem}
+  .picker-check{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--accent);display:none;align-items:center;justify-content:center;color:#fff;font-size:.6rem}
+  .picker-item.selected .picker-check{display:flex}
+  .picker-label{padding:.35rem .4rem;font-size:.68rem;font-weight:600;color:var(--text);line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .picker-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.75rem;gap:.5rem;flex-wrap:wrap}
+  .picker-selected-count{font-size:.8rem;color:var(--muted2)}
+  /* Rename modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:center;justify-content:center;padding:1rem}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:100%;max-width:400px}
+  .modal h3{font-size:1rem;font-weight:700;margin-bottom:1rem}
+  .modal input{width:100%;padding:.6rem .9rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font);font-size:.875rem;outline:none;margin-bottom:.75rem;box-sizing:border-box}
+  .modal input:focus{border-color:var(--accent)}
+  .modal-actions{display:flex;gap:.5rem;justify-content:flex-end}
+</style>
+{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="page-header">
+    <h1><i class="fa fa-folder" style="color:var(--accent2)"></i> Kelola Folder</h1>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost btn-sm">← Dashboard</a>
+  </div>
+
+  <!-- Create folder -->
+  <div class="card">
+    <div class="card-title">Buat Folder Baru</div>
+    <form method="POST" action="{{ url_for('admin_folder_create') }}" class="create-form">
+      <input type="text" name="name" placeholder="Nama folder..." required maxlength="60"/>
+      <input type="text" name="description" placeholder="Deskripsi (opsional)..." maxlength="120"/>
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Buat</button>
+    </form>
+  </div>
+
+  <!-- Folder list -->
+  {% if folders %}
+  <div class="card">
+    <div class="card-title">{{ folders|length }} Folder</div>
+    {% for folder in folders %}
+    <div class="folder-item" id="folder-{{ folder.id }}">
+      <div class="folder-top">
+        <div class="folder-icon"><i class="fa fa-folder-open"></i></div>
+        <div class="folder-info">
+          <div class="folder-name">{{ folder.name }}</div>
+          {% if folder.description %}<div class="folder-desc">{{ folder.description }}</div>{% endif %}
+        </div>
+        <span class="folder-count">{{ folder.video_count }} video</span>
+        <div class="folder-actions">
+          <button class="btn btn-ghost btn-sm" onclick="togglePicker({{ folder.id }})">
+            <i class="fa fa-film"></i> Pilih Video
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="openRename({{ folder.id }}, '{{ folder.name|e }}', '{{ (folder.description or '')|e }}')">
+            <i class="fa fa-pen"></i>
+          </button>
+          <form method="POST" action="{{ url_for('admin_folder_delete', folder_id=folder.id) }}" onsubmit="return confirm('Hapus folder ini?')" style="display:inline">
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Video picker -->
+      <div class="video-picker" id="picker-{{ folder.id }}">
+        <input class="picker-search" type="text" placeholder="Cari video..." oninput="filterPicker(this, {{ folder.id }})"/>
+        <form method="POST" action="{{ url_for('admin_folder_set_videos', folder_id=folder.id) }}" id="pickerForm-{{ folder.id }}">
+          <div class="picker-grid" id="pickerGrid-{{ folder.id }}">
+            {% for v in all_videos %}
+            <label class="picker-item {% if v.id in (folder.videos | map(attribute='id') | list) %}selected{% endif %}" id="pi-{{ folder.id }}-{{ v.id }}">
+              <input type="checkbox" name="video_ids" value="{{ v.id }}"
+                {% if v.id in (folder.videos | map(attribute='id') | list) %}checked{% endif %}
+                onchange="updatePickerItem(this)"/>
+              <div class="picker-thumb">
+                {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" loading="lazy"/>
+                {% else %}<div class="no-thumb"><i class="fa fa-film"></i></div>{% endif %}
+              </div>
+              <div class="picker-check"><i class="fa fa-check"></i></div>
+              <div class="picker-label">{{ v.title }}</div>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="picker-footer">
+            <span class="picker-selected-count" id="pickerCount-{{ folder.id }}">
+              {{ folder.video_count }} video dipilih
+            </span>
+            <div style="display:flex;gap:.4rem">
+              <button type="button" class="btn btn-ghost btn-sm" onclick="togglePicker({{ folder.id }})">Batal</button>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-save"></i> Simpan</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center;padding:2.5rem 1rem;color:var(--muted2)">
+    <i class="fa fa-folder-open" style="font-size:2.5rem;margin-bottom:.75rem;display:block;opacity:.4"></i>
+    <p>Belum ada folder. Buat folder pertamamu di atas!</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Rename modal -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal">
+    <h3><i class="fa fa-pen" style="color:var(--accent2)"></i> Edit Folder</h3>
+    <form method="POST" id="renameForm">
+      <input type="text" name="name" id="renameInput" placeholder="Nama folder..." required maxlength="60"/>
+      <input type="text" name="description" id="renameDesc" placeholder="Deskripsi (opsional)..." maxlength="120"/>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeRename()">Batal</button>
+        <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function togglePicker(folderId){
+  const el=document.getElementById('picker-'+folderId);
+  el.classList.toggle('open');
+  if(el.classList.contains('open')) el.querySelector('.picker-search').focus();
+}
+function updatePickerItem(cb){
+  const label=cb.closest('.picker-item');
+  label.classList.toggle('selected', cb.checked);
+  // Update count
+  const form=cb.closest('form');
+  const folderId=form.id.replace('pickerForm-','');
+  const count=form.querySelectorAll('input[type=checkbox]:checked').length;
+  document.getElementById('pickerCount-'+folderId).textContent=count+' video dipilih';
+}
+function filterPicker(input, folderId){
+  const q=input.value.toLowerCase();
+  document.querySelectorAll('#pickerGrid-'+folderId+' .picker-item').forEach(el=>{
+    const label=el.querySelector('.picker-label').textContent.toLowerCase();
+    el.style.display=label.includes(q)?'':'none';
+  });
+}
+function openRename(id, name, desc){
+  document.getElementById('renameForm').action='/admin/folders/'+id+'/rename';
+  document.getElementById('renameInput').value=name;
+  document.getElementById('renameDesc').value=desc;
+  document.getElementById('renameModal').classList.add('open');
+  document.getElementById('renameInput').focus();
+}
+function closeRename(){
+  document.getElementById('renameModal').classList.remove('open');
+}
+document.getElementById('renameModal').addEventListener('click',function(e){
+  if(e.target===this) closeRename();
+});
+</script>
+{% endblock %}
