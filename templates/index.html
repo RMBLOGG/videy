@@ -14,7 +14,8 @@
   .cat-chip{padding:.3rem .8rem;border-radius:99px;font-size:.75rem;font-weight:600;text-decoration:none;border:1px solid var(--border2);color:var(--muted2);white-space:nowrap;transition:all .2s;background:var(--surface)}
   .cat-chip:hover,.cat-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
   /* Folder grid */
-  .folder-grid{display:flex;gap:.75rem;flex-wrap:wrap}
+  .folder-grid{display:flex;gap:.75rem;overflow-x:auto;padding-bottom:.5rem;scrollbar-width:none}
+  .folder-grid::-webkit-scrollbar{display:none}
   .folder-card{display:flex;flex-direction:column;align-items:center;text-decoration:none;width:90px;transition:transform .2s}
   .folder-card:hover{transform:translateY(-3px)}
   .folder-card-icon{position:relative;width:64px;height:56px;display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--accent2);margin-bottom:.4rem;filter:drop-shadow(0 2px 6px rgba(108,99,255,.3))}
