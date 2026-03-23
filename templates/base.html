@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>{% block title %}VIDEY{% endblock %}</title>
+  <title>{% block title %}VIDEYsky{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -161,7 +161,7 @@
 </head>
 <body>
 <nav>
-  <a href="{{ url_for('index') }}" class="nav-logo"><span class="dot"></span>VIDEY</a>
+  <a href="{{ url_for('index') }}" class="nav-logo"><span class="dot"></span>VIDEYsky</a>
 
   <!-- Desktop search -->
   <form class="nav-search" action="{{ url_for('search') }}" method="get">
@@ -238,7 +238,7 @@
 
 {% block content %}{% endblock %}
 
-<footer><p>© 2025 VIDEY</p></footer>
+<footer><p>© 2025 VIDEYsky</p></footer>
 
 <script>
 function toggleSearch(){
