@@ -118,16 +118,14 @@ def index():
     cat  = request.args.get('cat', '')
     videos = []
     featured = []
+    folders_data = []
     try:
-        # Fetch all, normalize, then filter in Python (safe if new columns don't exist yet)
         if sort == 'populer':
             raw = get_supabase().table('videos').select('*').order('views', desc=True).execute().data
         else:
             raw = get_supabase().table('videos').select('*').order('created_at', desc=True).execute().data
 
         all_videos = normalize_videos(raw)
-
-        # Filter approved (works even if status col missing — normalize defaults to 'approved')
         approved = [v for v in all_videos if v.get('status', 'approved') in ('approved', None, '')]
 
         if cat:
@@ -139,10 +137,20 @@ def index():
             videos = approved
 
         featured = [v for v in all_videos if v.get('is_featured', False) and v.get('status', 'approved') in ('approved', None, '')]
+
+        # Load folders dengan video-nya (hanya di halaman utama tanpa filter kategori)
+        if not cat:
+            folders = get_supabase().table('folders').select('*').order('created_at', desc=True).execute().data or []
+            vid_map = {v['id']: v for v in all_videos}
+            for f in folders:
+                fv = get_supabase().table('folder_videos').select('video_id').eq('folder_id', f['id']).execute().data or []
+                f['videos'] = [vid_map[r['video_id']] for r in fv if r['video_id'] in vid_map]
+            folders_data = [f for f in folders if f['videos']]  # Hanya tampil kalau ada isinya
     except Exception as e:
         videos = []
         featured = []
-    return render_template('index.html', videos=videos, featured=featured, sort=sort, cat=cat)
+        folders_data = []
+    return render_template('index.html', videos=videos, featured=featured, sort=sort, cat=cat, folders=folders_data)
 
 @app.route('/v/<video_id>')
 def watch(video_id):
@@ -590,6 +598,77 @@ def embed(video_id):
         return render_template('embed.html', video=video)
     except:
         return "Video not found", 404
+
+# ── FOLDER ROUTES ──────────────────────────────────────────────
+
+@app.route('/admin/folders')
+@login_required
+def admin_folders():
+    try:
+        folders = get_supabase().table('folders').select('*').order('created_at', desc=True).execute().data or []
+        # Hitung jumlah video per folder
+        for f in folders:
+            count = get_supabase().table('folder_videos').select('id', count='exact').eq('folder_id', f['id']).execute()
+            f['video_count'] = count.count or 0
+        all_videos = get_supabase().table('videos').select('id,title,thumbnail_url').eq('status','approved').order('created_at', desc=True).execute().data or []
+        return render_template('admin/folders.html', folders=folders, all_videos=all_videos)
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/folders/create', methods=['POST'])
+@login_required
+def admin_folder_create():
+    try:
+        name = request.form.get('name', '').strip()
+        desc = request.form.get('description', '').strip()
+        if not name:
+            flash('Nama folder wajib diisi', 'error')
+            return redirect(url_for('admin_folders'))
+        result = get_supabase().table('folders').insert({'name': name, 'description': desc}).execute()
+        flash(f'Folder "{name}" berhasil dibuat', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('admin_folders'))
+
+@app.route('/admin/folders/delete/<int:folder_id>', methods=['POST'])
+@login_required
+def admin_folder_delete(folder_id):
+    try:
+        get_supabase().table('folders').delete().eq('id', folder_id).execute()
+        flash('Folder dihapus', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('admin_folders'))
+
+@app.route('/admin/folders/<int:folder_id>/videos', methods=['POST'])
+@login_required
+def admin_folder_set_videos(folder_id):
+    try:
+        # Hapus semua video lama di folder ini
+        get_supabase().table('folder_videos').delete().eq('folder_id', folder_id).execute()
+        # Tambah video yang dipilih
+        video_ids = request.form.getlist('video_ids')
+        if video_ids:
+            rows = [{'folder_id': folder_id, 'video_id': vid} for vid in video_ids]
+            get_supabase().table('folder_videos').insert(rows).execute()
+        flash('Isi folder berhasil diperbarui', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('admin_folders'))
+
+@app.route('/admin/folders/<int:folder_id>/rename', methods=['POST'])
+@login_required
+def admin_folder_rename(folder_id):
+    try:
+        name = request.form.get('name', '').strip()
+        desc = request.form.get('description', '').strip()
+        if name:
+            get_supabase().table('folders').update({'name': name, 'description': desc}).eq('id', folder_id).execute()
+            flash('Folder diperbarui', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('admin_folders'))
 
 if __name__ == '__main__':
     app.run(debug=True)
