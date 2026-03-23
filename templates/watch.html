@@ -56,12 +56,32 @@
   .report-reasons label{display:flex;align-items:center;gap:.5rem;font-size:.875rem;cursor:pointer}
   @media(max-width:480px){.related-thumb{width:88px}}
 </style>
+<style>
+  .warn-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:1rem}
+  .warn-box{background:#111;border-radius:16px;padding:2rem 1.5rem;max-width:360px;width:100%;text-align:center;border:1px solid rgba(255,255,255,.08)}
+  .warn-icon{font-size:3rem;margin-bottom:1rem}
+  .warn-title{font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:.75rem;letter-spacing:.05em}
+  .warn-text{color:rgba(255,255,255,.7);font-size:.875rem;line-height:1.6;margin-bottom:1.5rem}
+  .warn-close{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:1.4rem;text-decoration:none;transition:background .2s}
+  .warn-close:hover{background:rgba(255,255,255,.28)}
+</style>
 {% endblock %}
 {% block content %}
+
+<!-- Warning overlay -->
+<div class="warn-overlay" id="warnOverlay">
+  <div class="warn-box">
+    <div class="warn-icon">⚠️</div>
+    <div class="warn-title">PERINGATAN</div>
+    <div class="warn-text">Video ini mungkin berisi konten sensitif.<br>Klik tanda silang (X) di bawah untuk menutup peringatan ini dan menonton video.</div>
+    <a class="warn-close" href="https://www.profitablecpmratenetwork.com/hn5xg1311?key=73788c42896a7cfa8c0738b866b1517d" target="_blank" onclick="closeWarning()">✕</a>
+  </div>
+</div>
+
 <div class="watch-wrap">
   <div>
     <div class="player-box">
-      <video controls autoplay id="mainVideo" preload="metadata">
+      <video controls id="mainVideo" preload="metadata">
         <source src="{{ video.video_url }}" type="video/mp4">
       </video>
     </div>
@@ -177,6 +197,11 @@
 <script>
 const VID='{{ video.id }}';
 let counted=false;
+
+function closeWarning(){
+  document.getElementById("warnOverlay").style.display="none";
+  var v=document.getElementById("mainVideo");if(v){v.play().catch(function(){});}
+}
 document.getElementById('mainVideo').addEventListener('play',function(){
   if(!counted){counted=true;fetch('/api/view/'+VID,{method:'POST'}).then(r=>r.json()).then(()=>{const el=document.getElementById('viewCount');el.innerHTML='<i class="fa fa-eye"></i> '+(parseInt(el.textContent.replace(/\D/g,''))+1);})}
 });
