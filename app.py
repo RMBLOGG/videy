@@ -138,14 +138,13 @@ def index():
 
         featured = [v for v in all_videos if v.get('is_featured', False) and v.get('status', 'approved') in ('approved', None, '')]
 
-        # Load folders dengan video-nya (hanya di halaman utama tanpa filter kategori)
+        # Load folders (hanya info, tanpa video — detail ada di halaman masing-masing)
         if not cat:
-            folders = get_supabase().table('folders').select('*').order('created_at', desc=True).execute().data or []
-            vid_map = {v['id']: v for v in all_videos}
-            for f in folders:
-                fv = get_supabase().table('folder_videos').select('video_id').eq('folder_id', f['id']).execute().data or []
-                f['videos'] = [vid_map[r['video_id']] for r in fv if r['video_id'] in vid_map]
-            folders_data = [f for f in folders if f['videos']]  # Hanya tampil kalau ada isinya
+            folders_raw = get_supabase().table('folders').select('*').order('created_at', desc=True).execute().data or []
+            for f in folders_raw:
+                count = get_supabase().table('folder_videos').select('id', count='exact').eq('folder_id', f['id']).execute()
+                f['video_count'] = count.count or 0
+            folders_data = [f for f in folders_raw if f['video_count'] > 0]
     except Exception as e:
         videos = []
         featured = []
@@ -600,6 +599,23 @@ def embed(video_id):
         return "Video not found", 404
 
 # ── FOLDER ROUTES ──────────────────────────────────────────────
+
+@app.route('/folder/<int:folder_id>')
+def folder_detail(folder_id):
+    try:
+        folder = get_supabase().table('folders').select('*').eq('id', folder_id).single().execute().data
+        if not folder:
+            return render_template('404.html'), 404
+        fv = get_supabase().table('folder_videos').select('video_id').eq('folder_id', folder_id).execute().data or []
+        video_ids = [r['video_id'] for r in fv]
+        videos = []
+        if video_ids:
+            raw = get_supabase().table('videos').select('*').in_('id', video_ids).execute().data or []
+            videos = normalize_videos(raw)
+            videos = [v for v in videos if v.get('status','approved') in ('approved', None, '')]
+        return render_template('folder.html', folder=folder, videos=videos)
+    except Exception as e:
+        return render_template('404.html'), 404
 
 @app.route('/admin/folders')
 @login_required
