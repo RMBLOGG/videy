@@ -17,6 +17,15 @@
   .drop-zone .icon { font-size:1.75rem; margin-bottom:.5rem; }
   .drop-zone p { color:var(--muted2); font-size:.875rem; }
   .drop-zone .file-picked { margin-top:.5rem; color:var(--accent2); font-size:.82rem; font-weight:600; word-break:break-all; }
+  .vid-preview-wrap{display:none;position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;width:100%;background:#000;margin-bottom:.5rem}
+  .vid-preview-wrap.show{display:block}
+  .vid-preview-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+  .vid-preview-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.45)}
+  .vid-preview-overlay .play-icon{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;margin-bottom:.4rem}
+  .vid-preview-overlay .vid-fname{color:rgba(255,255,255,.85);font-size:.72rem;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.5);padding:0 .5rem;text-align:center;word-break:break-all}
+  .drop-zone.has-file{padding:.6rem;border-style:solid;border-color:var(--accent)}
+  .drop-zone.has-file .icon,.drop-zone.has-file>p{display:none}
+  .drop-zone.has-file input{z-index:2}
   .progress-wrap { display:none; margin-top:1.25rem; }
   .progress-wrap.show { display:block; }
   .progress-lbl { font-size:.85rem; color:var(--muted2); margin-bottom:.5rem; font-weight:500; }
@@ -48,9 +57,15 @@
       <label>File Video * (MP4, WebM, MOV)</label>
       <div class="drop-zone" id="vidDrop">
         <input type="file" id="vidInput" accept="video/*"/>
+        <div class="vid-preview-wrap" id="vidPreview">
+          <img id="vidThumbImg" src="" alt="preview"/>
+          <div class="vid-preview-overlay">
+            <div class="play-icon"><i class="fa fa-play"></i></div>
+            <div class="vid-fname" id="vidName"></div>
+          </div>
+        </div>
         <div class="icon"><i class="fa fa-film"></i></div>
         <p>Klik atau seret video ke sini</p>
-        <div class="file-picked" id="vidName"></div>
       </div>
     </div>
     <div class="form-group">
@@ -90,6 +105,21 @@ document.getElementById('vidInput').addEventListener('change',function(){
     titleInput.value=name;
     titleInput.dispatchEvent(new Event('input'));
   }
+  // Capture frame preview dari video
+  const url=URL.createObjectURL(file);
+  const vid=document.createElement('video');
+  vid.src=url; vid.muted=true; vid.playsInline=true;
+  vid.addEventListener('loadeddata',function(){ vid.currentTime=Math.min(1,vid.duration*0.1); });
+  vid.addEventListener('seeked',function(){
+    const canvas=document.createElement('canvas');
+    canvas.width=vid.videoWidth||640; canvas.height=vid.videoHeight||360;
+    canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
+    document.getElementById('vidThumbImg').src=canvas.toDataURL('image/jpeg',0.8);
+    document.getElementById('vidPreview').classList.add('show');
+    document.getElementById('vidDrop').classList.add('has-file');
+    URL.revokeObjectURL(url);
+  });
+  vid.load();
 });
 document.getElementById('thumbInput').addEventListener('change',function(){ document.getElementById('thumbName').textContent=this.files[0]?.name||''; });
 ['vidDrop','thumbDrop'].forEach(id=>{
