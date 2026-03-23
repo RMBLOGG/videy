@@ -251,9 +251,10 @@ def save_video():
             return jsonify({'success': False, 'error': 'Judul wajib diisi'}), 400
 
         ip = get_client_ip()
+        is_admin = session.get('logged_in', False)
 
-        # Rate limit check
-        if not check_rate_limit(ip):
+        # Rate limit check — skip untuk admin
+        if not is_admin and not check_rate_limit(ip):
             return jsonify({'success': False, 'error': f'Terlalu banyak upload. Maksimal {UPLOAD_LIMIT_PER_HOUR}x per jam.'}), 429
 
         # Blacklist check
@@ -262,7 +263,6 @@ def save_video():
             return jsonify({'success': False, 'error': f'Judul mengandung kata terlarang: "{matched}"'}), 400
 
         video_id = str(uuid.uuid4())[:8]
-        is_admin = data.get('is_admin', False)
 
         get_supabase().table('videos').insert({
             'id': video_id,
