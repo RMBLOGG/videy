@@ -2,40 +2,47 @@
 {% block title %}Upload Video — VIDEY Admin{% endblock %}
 {% block head %}
 <style>
-  .upload-page { max-width:680px; margin:0 auto; padding:1.5rem 1.25rem; }
-  .page-header { display:flex; align-items:center; gap:.875rem; margin-bottom:1.5rem; }
-  .page-header h1 { font-size:1.5rem; font-weight:800; letter-spacing:-.03em; }
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.75rem; }
-  .form-group { margin-bottom:1.25rem; }
-  .form-group label { display:block; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:.5rem; }
-  .form-group input[type=text], .form-group textarea { width:100%; padding:.7rem 1rem; background:var(--surface2); border:1px solid var(--border); border-radius:10px; outline:none; color:var(--text); font-family:var(--font); font-size:.9rem; transition:border-color .2s,box-shadow .2s; resize:vertical; }
-  .form-group input:focus, .form-group textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--glow); }
-  .form-group textarea { min-height:90px; }
-  .drop-zone { border:2px dashed var(--border2); border-radius:12px; padding:1.75rem 1rem; text-align:center; cursor:pointer; position:relative; transition:all .2s; }
-  .drop-zone:hover, .drop-zone.over { border-color:var(--accent); background:rgba(108,99,255,.06); }
-  .drop-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-  .drop-zone .icon { font-size:1.75rem; margin-bottom:.5rem; }
-  .drop-zone p { color:var(--muted2); font-size:.875rem; }
-  .drop-zone .file-picked { margin-top:.5rem; color:var(--accent2); font-size:.82rem; font-weight:600; word-break:break-all; }
-  .vid-preview-wrap{display:none;position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;width:100%;background:#000;margin-bottom:.5rem}
-  .vid-preview-wrap.show{display:block}
-  .vid-preview-wrap img{width:100%;height:100%;object-fit:cover;display:block}
-  .vid-preview-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.45)}
-  .vid-preview-overlay .play-icon{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;margin-bottom:.4rem}
-  .vid-preview-overlay .vid-fname{color:rgba(255,255,255,.85);font-size:.72rem;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.5);padding:0 .5rem;text-align:center;word-break:break-all}
-  .drop-zone.has-file{padding:.6rem;border-style:solid;border-color:var(--accent)}
-  .drop-zone.has-file .icon,.drop-zone.has-file>p{display:none}
-  .drop-zone.has-file input{z-index:2}
-  .progress-wrap { display:none; margin-top:1.25rem; }
-  .progress-wrap.show { display:block; }
-  .progress-lbl { font-size:.85rem; color:var(--muted2); margin-bottom:.5rem; font-weight:500; }
-  .progress-track { height:6px; background:var(--surface2); border-radius:99px; overflow:hidden; margin-bottom:.4rem; }
-  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px; width:0%; transition:width .25s; }
-  .progress-pct { font-size:.78rem; color:var(--muted); font-family:var(--mono); }
-  .form-actions { display:flex; gap:.75rem; margin-top:1.5rem; flex-wrap:wrap; }
-  .submit-btn { background:var(--accent); color:#fff; border:none; border-radius:99px; padding:.65rem 1.75rem; font-family:var(--font); font-weight:700; font-size:.95rem; cursor:pointer; transition:all .2s; box-shadow:0 4px 20px var(--glow); }
-  .submit-btn:hover { opacity:.88; transform:translateY(-1px); }
-  .submit-btn:disabled { opacity:.45; cursor:not-allowed; transform:none; box-shadow:none; }
+  .upload-page{max-width:760px;margin:0 auto;padding:1.5rem 1.25rem}
+  .page-header{display:flex;align-items:center;gap:.875rem;margin-bottom:1.5rem}
+  .page-header h1{font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
+  .main-dropzone{border:2px dashed var(--border2);border-radius:16px;padding:2.5rem 1rem;text-align:center;cursor:pointer;position:relative;transition:all .2s;margin-bottom:1.25rem}
+  .main-dropzone:hover,.main-dropzone.over{border-color:var(--accent);background:rgba(108,99,255,.06)}
+  .main-dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .main-dropzone .dz-icon{font-size:2.5rem;color:var(--accent2);margin-bottom:.75rem}
+  .main-dropzone h3{font-weight:700;font-size:1rem;margin-bottom:.3rem}
+  .main-dropzone p{color:var(--muted2);font-size:.82rem}
+  .main-dropzone .dz-hint{display:inline-block;margin-top:.75rem;font-size:.75rem;color:var(--muted);background:var(--surface2);padding:.25rem .75rem;border-radius:99px}
+  #queueList{display:flex;flex-direction:column;gap:.875rem}
+  .vid-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s}
+  .vid-card.uploading{border-color:var(--accent)}
+  .vid-card.done{border-color:rgba(74,222,128,.4)}
+  .vid-card.error{border-color:rgba(248,113,113,.4)}
+  .vid-card-top{display:flex;gap:.75rem;padding:.875rem}
+  .vid-thumb-wrap{position:relative;width:96px;flex-shrink:0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:var(--surface2)}
+  .vid-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+  .vid-thumb-wrap .no-thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1.5rem}
+  .vid-card-body{flex:1;min-width:0}
+  .vid-card-body input[type=text]{width:100%;padding:.5rem .75rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.85rem;outline:none;transition:border-color .2s;box-sizing:border-box;margin-bottom:.5rem}
+  .vid-card-body input:focus{border-color:var(--accent)}
+  .vid-card-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+  .vid-size{font-size:.7rem;color:var(--muted2)}
+  .vid-status{font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:99px}
+  .vid-status.pending{background:var(--surface2);color:var(--muted2)}
+  .vid-status.uploading{background:rgba(108,99,255,.15);color:var(--accent2)}
+  .vid-status.done{background:rgba(74,222,128,.12);color:var(--green)}
+  .vid-status.error{background:rgba(248,113,113,.12);color:#f87171}
+  .vid-remove{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:.2rem .4rem;border-radius:6px;transition:color .2s}
+  .vid-remove:hover{color:#f87171}
+  .vid-progress{height:3px;background:var(--surface2);margin:0 .875rem .875rem}
+  .vid-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;width:0%;transition:width .2s}
+  .vid-card.done .vid-progress-fill{width:100%;background:linear-gradient(90deg,#4ade80,#22d3ee)}
+  .overall-progress{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;display:none}
+  .overall-progress.show{display:block}
+  .overall-lbl{font-size:.82rem;font-weight:600;color:var(--muted2);margin-bottom:.5rem}
+  .overall-track{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:.35rem}
+  .overall-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;width:0%;transition:width .3s}
+  .overall-pct{font-size:.75rem;color:var(--muted);font-family:var(--mono)}
+  .queue-actions{display:flex;gap:.75rem;margin-top:1.25rem;flex-wrap:wrap}
 </style>
 {% endblock %}
 {% block content %}
@@ -44,163 +51,204 @@
     <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost btn-sm">← Kembali</a>
     <h1>Upload Video</h1>
   </div>
-  <div class="card">
-    <div class="form-group">
-      <label>Judul Video *</label>
-      <input type="text" id="title" required placeholder="Masukkan judul video..."/>
-    </div>
-    <div class="form-group">
-      <label>Deskripsi</label>
-      <textarea id="description" placeholder="Deskripsi (opsional)..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>File Video * (MP4, WebM, MOV)</label>
-      <div class="drop-zone" id="vidDrop">
-        <input type="file" id="vidInput" accept="video/*"/>
-        <div class="vid-preview-wrap" id="vidPreview">
-          <img id="vidThumbImg" src="" alt="preview"/>
-          <div class="vid-preview-overlay">
-            <div class="play-icon"><i class="fa fa-play"></i></div>
-            <div class="vid-fname" id="vidName"></div>
-          </div>
-        </div>
-        <div class="icon"><i class="fa fa-film"></i></div>
-        <p>Klik atau seret video ke sini</p>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Thumbnail <span style="color:var(--muted)">(opsional)</span></label>
-      <div class="drop-zone" id="thumbDrop">
-        <input type="file" id="thumbInput" accept="image/*"/>
-        <div class="icon"><i class="fa fa-image"></i></div>
-        <p>Klik atau seret gambar thumbnail</p>
-        <div class="file-picked" id="thumbName"></div>
-      </div>
-    </div>
-    <div class="progress-wrap" id="progressWrap">
-      <div class="progress-lbl" id="progressLbl">Mempersiapkan...</div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      <div class="progress-pct" id="progressPct">0%</div>
-    </div>
-    <div class="form-actions">
-      <button class="submit-btn" id="submitBtn" onclick="startUpload()">Upload Video →</button>
-      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">Batal</a>
-    </div>
+
+  <div class="main-dropzone" id="mainDrop">
+    <input type="file" id="fileInput" accept="video/*" multiple/>
+    <div class="dz-icon"><i class="fa fa-cloud-upload"></i></div>
+    <h3>Klik atau seret video ke sini</h3>
+    <p>MP4, WebM, MOV — bisa pilih banyak sekaligus</p>
+    <span class="dz-hint"><i class="fa fa-info-circle"></i> Multi-upload didukung</span>
+  </div>
+
+  <div class="overall-progress" id="overallProgress">
+    <div class="overall-lbl" id="overallLbl">Mengupload...</div>
+    <div class="overall-track"><div class="overall-fill" id="overallFill"></div></div>
+    <div class="overall-pct" id="overallPct">0%</div>
+  </div>
+
+  <div id="queueList"></div>
+
+  <div class="queue-actions" id="queueActions" style="display:none">
+    <button class="btn btn-primary" id="uploadAllBtn" onclick="uploadAll()">
+      <i class="fa fa-upload"></i> Upload Semua (<span id="queueCount">0</span>)
+    </button>
+    <button class="btn btn-ghost" onclick="clearDone()">Bersihkan Selesai</button>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">Batal</a>
   </div>
 </div>
-<script>
-const CLOUD_NAME = "dzfkklsza";
-const UPLOAD_PRESET = "videy_unsigned";
 
-document.getElementById('vidInput').addEventListener('change',function(){
-  const file=this.files[0];
-  if(!file) return;
-  document.getElementById('vidName').textContent=file.name;
-  const titleInput=document.getElementById('title');
-  if(!titleInput.value.trim()){
-    let name=file.name.replace(/\.[^/.]+$/,'');
-    name=name.replace(/[_\-\.]+/g,' ').trim();
-    name=name.replace(/\s+/g,' ');
+<script>
+const CLOUD_NAME="dzfkklsza",UPLOAD_PRESET="videy_unsigned";
+let queue=[],isUploading=false;
+
+const mainDrop=document.getElementById('mainDrop');
+const fileInput=document.getElementById('fileInput');
+mainDrop.addEventListener('dragover',e=>{e.preventDefault();mainDrop.classList.add('over');});
+mainDrop.addEventListener('dragleave',()=>mainDrop.classList.remove('over'));
+mainDrop.addEventListener('drop',e=>{
+  e.preventDefault();mainDrop.classList.remove('over');
+  addFiles(Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('video/')));
+});
+fileInput.addEventListener('change',function(){addFiles(Array.from(this.files));this.value='';});
+
+function addFiles(files){
+  files.forEach(file=>{
+    const id='v_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    let name=file.name.replace(/\.[^/.]+$/,'').replace(/[_\-\.]+/g,' ').trim().replace(/\s+/g,' ');
     name=name.charAt(0).toUpperCase()+name.slice(1);
-    titleInput.value=name;
-    titleInput.dispatchEvent(new Event('input'));
-  }
-  // Capture frame preview dari video
-  const url=URL.createObjectURL(file);
+    const item={id,file,title:name,thumbDataUrl:null,status:'pending',progress:0};
+    queue.push(item);renderCard(item);captureThumb(item);
+  });
+  updateActions();
+}
+
+function renderCard(item){
+  const list=document.getElementById('queueList');
+  const card=document.createElement('div');
+  card.className='vid-card';card.id='card_'+item.id;
+  card.innerHTML=`
+    <div class="vid-card-top">
+      <div class="vid-thumb-wrap" id="thumb_${item.id}"><div class="no-thumb"><i class="fa fa-film"></i></div></div>
+      <div class="vid-card-body">
+        <input type="text" id="title_${item.id}" value="${escHtml(item.title)}" placeholder="Judul video..."
+          oninput="queue.find(q=>q.id==='${item.id}').title=this.value"/>
+        <div class="vid-card-meta">
+          <span class="vid-size">${formatSize(item.file.size)}</span>
+          <span class="vid-status pending" id="status_${item.id}">Menunggu</span>
+          <button class="vid-remove" id="remove_${item.id}" onclick="removeItem('${item.id}')" title="Hapus"><i class="fa fa-times"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="vid-progress"><div class="vid-progress-fill" id="prog_${item.id}"></div></div>`;
+  list.appendChild(card);
+}
+
+function captureThumb(item){
+  const url=URL.createObjectURL(item.file);
   const vid=document.createElement('video');
-  vid.src=url; vid.muted=true; vid.playsInline=true;
-  vid.addEventListener('loadeddata',function(){ vid.currentTime=Math.min(1,vid.duration*0.1); });
-  vid.addEventListener('seeked',function(){
+  vid.src=url;vid.muted=true;vid.playsInline=true;
+  vid.addEventListener('loadeddata',()=>{vid.currentTime=Math.min(1,vid.duration*0.1);});
+  vid.addEventListener('seeked',()=>{
     const canvas=document.createElement('canvas');
-    canvas.width=vid.videoWidth||640; canvas.height=vid.videoHeight||360;
+    canvas.width=vid.videoWidth||640;canvas.height=vid.videoHeight||360;
     canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
-    document.getElementById('vidThumbImg').src=canvas.toDataURL('image/jpeg',0.8);
-    document.getElementById('vidPreview').classList.add('show');
-    document.getElementById('vidDrop').classList.add('has-file');
+    item.thumbDataUrl=canvas.toDataURL('image/jpeg',0.8);
+    const wrap=document.getElementById('thumb_'+item.id);
+    if(wrap)wrap.innerHTML=`<img src="${item.thumbDataUrl}"/>`;
     URL.revokeObjectURL(url);
   });
   vid.load();
-});
-document.getElementById('thumbInput').addEventListener('change',function(){ document.getElementById('thumbName').textContent=this.files[0]?.name||''; });
-['vidDrop','thumbDrop'].forEach(id=>{
-  const el=document.getElementById(id);
-  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
-  el.addEventListener('dragleave',()=>el.classList.remove('over'));
-  el.addEventListener('drop',()=>el.classList.remove('over'));
-});
-
-function setProgress(pct, label) {
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressPct').textContent = Math.round(pct) + '%';
-  document.getElementById('progressLbl').textContent = label;
 }
 
-async function uploadToCloudinary(file, resourceType, onProgress) {
-  return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET);
-    formData.append('folder', 'videy/' + (resourceType === 'video' ? 'videos' : 'thumbnails'));
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`);
-    xhr.upload.addEventListener('progress', e => { if (e.lengthComputable) onProgress(e.loaded / e.total * 100); });
-    xhr.onload = () => { if (xhr.status === 200) resolve(JSON.parse(xhr.responseText)); else reject(new Error('Upload gagal: ' + xhr.responseText)); };
-    xhr.onerror = () => reject(new Error('Koneksi gagal'));
-    xhr.send(formData);
+function removeItem(id){
+  queue=queue.filter(q=>q.id!==id);
+  const card=document.getElementById('card_'+id);
+  if(card)card.remove();
+  updateActions();
+}
+
+function clearDone(){
+  queue.filter(q=>q.status==='done').forEach(q=>{
+    const card=document.getElementById('card_'+q.id);if(card)card.remove();
+  });
+  queue=queue.filter(q=>q.status!=='done');
+  updateActions();
+}
+
+function updateActions(){
+  const pending=queue.filter(q=>q.status==='pending').length;
+  document.getElementById('queueActions').style.display=queue.length>0?'flex':'none';
+  document.getElementById('queueCount').textContent=pending;
+  document.getElementById('uploadAllBtn').disabled=pending===0||isUploading;
+}
+
+function setCardStatus(id,status,label){
+  const el=document.getElementById('status_'+id);
+  const card=document.getElementById('card_'+id);
+  if(el){el.className='vid-status '+status;el.textContent=label;}
+  if(card)card.className='vid-card '+status;
+  if(status==='uploading'){const r=document.getElementById('remove_'+id);if(r)r.style.display='none';}
+}
+
+function setCardProgress(id,pct){
+  const fill=document.getElementById('prog_'+id);
+  if(fill)fill.style.width=pct+'%';
+}
+
+async function uploadToCloudinary(file,resourceType,onProgress){
+  return new Promise((resolve,reject)=>{
+    const fd=new FormData();
+    fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);
+    fd.append('folder','videy/'+(resourceType==='video'?'videos':'thumbnails'));
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST',`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`);
+    xhr.upload.addEventListener('progress',e=>{if(e.lengthComputable)onProgress(e.loaded/e.total*100);});
+    xhr.onload=()=>{if(xhr.status===200)resolve(JSON.parse(xhr.responseText));else reject(new Error('Upload gagal'));};
+    xhr.onerror=()=>reject(new Error('Koneksi gagal'));
+    xhr.send(fd);
   });
 }
 
-async function startUpload() {
-  const title = document.getElementById('title').value.trim();
-  const videoFile = document.getElementById('vidInput').files[0];
-  if (!title) { alert('Judul video wajib diisi!'); return; }
-  if (!videoFile) { alert('Pilih file video terlebih dahulu!'); return; }
+async function uploadAll(){
+  const pending=queue.filter(q=>q.status==='pending');
+  if(!pending.length)return;
+  isUploading=true;
+  document.getElementById('uploadAllBtn').disabled=true;
+  document.getElementById('overallProgress').classList.add('show');
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  document.getElementById('progressWrap').classList.add('show');
+  let done=0;
+  for(const item of pending){
+    const titleEl=document.getElementById('title_'+item.id);
+    item.title=titleEl?titleEl.value.trim():item.title;
+    if(!item.title)item.title=item.file.name.replace(/\.[^/.]+$/,'');
 
-  try {
-    setProgress(0, 'Mengupload video...');
-    const videoResult = await uploadToCloudinary(videoFile, 'video', pct => {
-      setProgress(pct * 0.8, `Mengupload video... ${Math.round(pct)}%`);
-    });
+    setCardStatus(item.id,'uploading','Mengupload...');
+    item.status='uploading';
 
-    let thumbnailUrl = null;
-    const thumbFile = document.getElementById('thumbInput').files[0];
-    if (thumbFile) {
-      setProgress(82, 'Mengupload thumbnail...');
-      const thumbResult = await uploadToCloudinary(thumbFile, 'image', () => {});
-      thumbnailUrl = thumbResult.secure_url;
-    } else {
-      thumbnailUrl = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_0/videy/videos/${videoResult.public_id.split('/').pop()}.jpg`;
+    try{
+      const videoResult=await uploadToCloudinary(item.file,'video',pct=>{
+        setCardProgress(item.id,pct*0.9);
+        const overall=((done+pct/100*0.9)/pending.length)*100;
+        document.getElementById('overallFill').style.width=overall+'%';
+        document.getElementById('overallPct').textContent=Math.round(overall)+'%';
+        document.getElementById('overallLbl').textContent=`Mengupload ${done+1}/${pending.length}: ${item.file.name}`;
+      });
+
+      const thumbnailUrl=`https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_0/${videoResult.public_id}.jpg`;
+
+      setCardProgress(item.id,95);
+      const resp=await fetch('/api/save-video',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          title:item.title,uploader_name:'Admin',
+          video_url:videoResult.secure_url,thumbnail_url:thumbnailUrl,
+          cloudinary_public_id:videoResult.public_id,
+          duration:Math.round(videoResult.duration||0)
+        })
+      });
+      const data=await resp.json();
+      if(!data.success)throw new Error(data.error||'Gagal menyimpan');
+
+      setCardProgress(item.id,100);
+      setCardStatus(item.id,'done','✓ Selesai');
+      item.status='done';
+    }catch(err){
+      setCardStatus(item.id,'error','✗ '+err.message);
+      item.status='error';
     }
 
-    setProgress(90, 'Menyimpan ke database...');
-    const resp = await fetch('/api/save-video', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: title,
-        description: document.getElementById('description').value.trim(),
-        uploader_name: 'Admin',
-        video_url: videoResult.secure_url,
-        thumbnail_url: thumbnailUrl,
-        cloudinary_public_id: videoResult.public_id,
-        duration: Math.round(videoResult.duration || 0)
-      })
-    });
-
-    const data = await resp.json();
-    if (!data.success) throw new Error(data.error || 'Gagal menyimpan');
-
-    setProgress(100, 'Selesai!');
-    window.location.href = '/admin';
-  } catch (err) {
-    btn.disabled = false;
-    document.getElementById('progressWrap').classList.remove('show');
-    alert('Error: ' + err.message);
+    done++;
+    const op=(done/pending.length)*100;
+    document.getElementById('overallFill').style.width=op+'%';
+    document.getElementById('overallPct').textContent=Math.round(op)+'%';
   }
+
+  document.getElementById('overallLbl').textContent=`Selesai! ${done} video diupload.`;
+  isUploading=false;
+  updateActions();
 }
+
+function formatSize(b){return b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB';}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 </script>
 {% endblock %}
