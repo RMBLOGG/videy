@@ -735,19 +735,22 @@ def user_register():
                     error = 'Email sudah terdaftar, silakan login.'
                 else:
                     # Simpan ke tabel users
-                    new_user = sb.table('users').insert({
-                        'username': username,
-                        'email':    email,
-                        'password': _hash_password(password),
-                    }).execute()
-                    if new_user.data:
-                        user = new_user.data[0]
-                        session['user_id']       = user['id']
-                        session['user_username'] = user['username']
-                        session['user_email']    = user['email']
-                        return redirect(url_for('index'))
-                    else:
-                        error = 'Gagal menyimpan akun, coba lagi.'
+                    try:
+                        new_user = sb.table('users').insert({
+                            'username': username,
+                            'email':    email,
+                            'password': _hash_password(password),
+                        }).execute()
+                        if new_user.data:
+                            user = new_user.data[0]
+                            session['user_id']       = user['id']
+                            session['user_username'] = user['username']
+                            session['user_email']    = user['email']
+                            return redirect(url_for('index'))
+                        else:
+                            error = 'Gagal menyimpan akun, coba lagi.'
+                    except Exception as e:
+                        error = f'Error: {str(e)}'
     return render_template('auth/register.html', error=error)
 
 @app.route('/masuk', methods=['GET', 'POST'])
