@@ -457,9 +457,9 @@
           {% for item in marquee_items %}
           <div class="nf-item-row">
             <button type="button" class="icon-pick-btn" onclick="openPicker(this)" title="Pilih Icon">
-              <i class="{{ item.icon if item.icon else 'fa fa-star' }}"></i>
+              <i class="{{ item.icon if item.icon else 'fas fa-star' }}"></i>
             </button>
-            <input type="hidden" name="icon[]" value="{{ item.icon if item.icon else 'fa fa-star' }}"/>
+            <input type="hidden" name="icon[]" value="{{ item.icon if item.icon else 'fas fa-star' }}"/>
             <input type="text" name="judul[]" class="nf-input" value="{{ item.judul }}" placeholder="misal: Premium"/>
             <input type="text" name="link[]"  class="nf-input" value="{{ item.link }}"  placeholder="misal: /premium"/>
             <button type="button" class="nf-del-btn" onclick="this.closest('.nf-item-row').remove()" title="Hapus">
@@ -502,37 +502,50 @@
 </div>
 
 <script>
+// Format: ['prefix', 'icon-name'] — prefix: fas/far/fab
 const FA_ICONS = [
-  'fa-star','fa-heart','fa-bolt','fa-fire','fa-crown','fa-gem','fa-gift','fa-bell',
-  'fa-check','fa-check-circle','fa-info-circle','fa-exclamation-circle','fa-exclamation-triangle',
-  'fa-times-circle','fa-ban','fa-lock','fa-unlock','fa-shield-alt','fa-user','fa-users',
-  'fa-user-shield','fa-user-check','fa-user-plus','fa-phone','fa-phone-alt','fa-mobile-alt',
-  'fa-envelope','fa-comment','fa-comments','fa-comment-dots','fa-paper-plane',
-  'fa-link','fa-external-link-alt','fa-share-alt','fa-globe','fa-wifi',
-  'fa-home','fa-store','fa-shopping-cart','fa-tag','fa-tags','fa-percent',
-  'fa-money-bill','fa-money-bill-wave','fa-coins','fa-credit-card','fa-wallet',
-  'fa-video','fa-film','fa-play','fa-play-circle','fa-tv','fa-camera','fa-photo-video',
-  'fa-music','fa-headphones','fa-microphone','fa-podcast',
-  'fa-trophy','fa-medal','fa-award','fa-flag','fa-rocket','fa-magic',
-  'fa-thumbs-up','fa-thumbs-down','fa-hand-point-right','fa-hand-peace',
-  'fa-download','fa-upload','fa-cloud','fa-cloud-download-alt','fa-cloud-upload-alt',
-  'fa-cog','fa-tools','fa-wrench','fa-code','fa-terminal','fa-database',
-  'fa-chart-bar','fa-chart-line','fa-chart-pie','fa-poll',
-  'fa-map-marker-alt','fa-map','fa-compass','fa-directions',
-  'fa-calendar','fa-calendar-alt','fa-clock','fa-history',
-  'fa-search','fa-filter','fa-list','fa-th','fa-th-large',
-  'fa-whatsapp','fa-facebook','fa-instagram','fa-twitter','fa-youtube','fa-telegram-plane',
-  'fab fa-whatsapp','fab fa-facebook','fab fa-instagram','fab fa-youtube','fab fa-telegram-plane'
+  ['fas','fa-star'],['fas','fa-heart'],['fas','fa-bolt'],['fas','fa-fire'],['fas','fa-crown'],
+  ['fas','fa-gem'],['fas','fa-gift'],['fas','fa-bell'],['fas','fa-check'],['fas','fa-circle-check'],
+  ['fas','fa-circle-info'],['fas','fa-circle-exclamation'],['fas','fa-triangle-exclamation'],
+  ['fas','fa-circle-xmark'],['fas','fa-ban'],['fas','fa-lock'],['fas','fa-unlock'],
+  ['fas','fa-shield-halved'],['fas','fa-user'],['fas','fa-users'],['fas','fa-user-shield'],
+  ['fas','fa-user-check'],['fas','fa-user-plus'],['fas','fa-phone'],['fas','fa-mobile-screen'],
+  ['fas','fa-envelope'],['fas','fa-comment'],['fas','fa-comments'],['fas','fa-comment-dots'],
+  ['fas','fa-paper-plane'],['fas','fa-link'],['fas','fa-arrow-up-right-from-square'],
+  ['fas','fa-share-nodes'],['fas','fa-globe'],['fas','fa-wifi'],['fas','fa-house'],
+  ['fas','fa-store'],['fas','fa-cart-shopping'],['fas','fa-tag'],['fas','fa-tags'],
+  ['fas','fa-percent'],['fas','fa-money-bill'],['fas','fa-money-bill-wave'],
+  ['fas','fa-coins'],['fas','fa-credit-card'],['fas','fa-wallet'],['fas','fa-video'],
+  ['fas','fa-film'],['fas','fa-play'],['fas','fa-circle-play'],['fas','fa-tv'],
+  ['fas','fa-camera'],['fas','fa-photo-film'],['fas','fa-music'],['fas','fa-headphones'],
+  ['fas','fa-microphone'],['fas','fa-podcast'],['fas','fa-trophy'],['fas','fa-medal'],
+  ['fas','fa-award'],['fas','fa-flag'],['fas','fa-rocket'],['fas','fa-wand-magic-sparkles'],
+  ['fas','fa-thumbs-up'],['fas','fa-thumbs-down'],['fas','fa-hand-point-right'],['fas','fa-hand-peace'],
+  ['fas','fa-download'],['fas','fa-upload'],['fas','fa-cloud'],['fas','fa-cloud-arrow-down'],
+  ['fas','fa-cloud-arrow-up'],['fas','fa-gear'],['fas','fa-screwdriver-wrench'],['fas','fa-wrench'],
+  ['fas','fa-code'],['fas','fa-terminal'],['fas','fa-database'],['fas','fa-chart-bar'],
+  ['fas','fa-chart-line'],['fas','fa-chart-pie'],['fas','fa-poll'],['fas','fa-location-dot'],
+  ['fas','fa-map'],['fas','fa-compass'],['fas','fa-route'],['fas','fa-calendar'],
+  ['fas','fa-calendar-days'],['fas','fa-clock'],['fas','fa-clock-rotate-left'],
+  ['fas','fa-magnifying-glass'],['fas','fa-filter'],['fas','fa-list'],['fas','fa-table-cells'],
+  ['fas','fa-table-cells-large'],['fas','fa-info'],['fas','fa-exclamation'],
+  ['fab','fa-whatsapp'],['fab','fa-facebook'],['fab','fa-instagram'],
+  ['fab','fa-youtube'],['fab','fa-telegram'],['fab','fa-twitter'],['fab','fa-tiktok'],
 ];
 
 let pickerTarget = null;
 
 function buildGrid(icons){
   const grid = document.getElementById('iconGrid');
-  grid.innerHTML = icons.map(ic => {
-    const cls = ic.startsWith('fab ') ? ic : 'fa ' + ic;
-    return `<div class="ipi" title="${ic}" onclick="selectIcon('${cls}')"><i class="${cls}"></i></div>`;
+  grid.innerHTML = icons.map(([prefix, name]) => {
+    const cls = prefix + ' ' + name;
+    return `<div class="ipi" title="${name}" onclick="selectIcon('${cls}')"><i class="${cls}"></i></div>`;
   }).join('');
+}
+
+function filterIcons(q){
+  const filtered = FA_ICONS.filter(([p,n]) => n.includes(q.toLowerCase()) || p.includes(q.toLowerCase()));
+  buildGrid(filtered);
 }
 
 function filterIcons(q){
@@ -575,9 +588,9 @@ function addItem(){
   row.className = 'nf-item-row';
   row.innerHTML = `
     <button type="button" class="icon-pick-btn" onclick="openPicker(this)" title="Pilih Icon">
-      <i class="fa fa-star"></i>
+      <i class="fas fa-star"></i>
     </button>
-    <input type="hidden" name="icon[]" value="fa fa-star"/>
+    <input type="hidden" name="icon[]" value="fas fa-star"/>
     <input type="text" name="judul[]" class="nf-input" placeholder="misal: Premium"/>
     <input type="text" name="link[]"  class="nf-input" placeholder="misal: /premium"/>
     <button type="button" class="nf-del-btn" onclick="this.closest('.nf-item-row').remove()" title="Hapus">
