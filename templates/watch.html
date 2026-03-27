@@ -83,7 +83,7 @@
 <div class="watch-wrap">
   <div>
     <div class="player-box">
-      <video controls controlsList="nodownload" id="mainVideo" preload="metadata">
+      <video controls controlsList="nodownload nofullscreen noremoteplayback" id="mainVideo" preload="metadata" disablePictureInPicture oncontextmenu="return false;">
         <source src="{{ video.video_url }}" type="video/mp4">
       </video>
     </div>
@@ -206,6 +206,17 @@
 <script>
 const VID='{{ video.id }}';
 let counted=false;
+
+// Blokir klik kanan & long-press di video (mencegah popup download)
+(function(){
+  var v=document.getElementById('mainVideo');
+  if(!v) return;
+  v.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
+  var longPressTimer;
+  v.addEventListener('touchstart',function(e){longPressTimer=setTimeout(function(){e.preventDefault();},300);},{passive:false});
+  v.addEventListener('touchend',function(){clearTimeout(longPressTimer);});
+  v.addEventListener('touchmove',function(){clearTimeout(longPressTimer);});
+})();
 
 function closeWarning(){
   document.getElementById("warnOverlay").style.display="none";
