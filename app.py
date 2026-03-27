@@ -1010,10 +1010,14 @@ def admin_marquee_save():
     sb = get_supabase()
     notifs = _get_all_notifs()
     marquee = next((n for n in notifs if n['type'] == 'marquee'), None)
-    # Ambil semua judul[] dan link[]
+    # Ambil semua judul[], link[], dan icon[]
     juduls = request.form.getlist('judul[]')
     links  = request.form.getlist('link[]')
-    items  = [{'judul': j.strip(), 'link': l.strip()} for j, l in zip(juduls, links) if j.strip()]
+    icons  = request.form.getlist('icon[]')
+    # pad icons jika kurang
+    while len(icons) < len(juduls):
+        icons.append('fa fa-star')
+    items  = [{'judul': j.strip(), 'link': l.strip(), 'icon': i.strip()} for j, l, i in zip(juduls, links, icons) if j.strip()]
     data = {
         'aktif':  request.form.get('aktif') == '1',
         'items':  json.dumps(items, ensure_ascii=False),
