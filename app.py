@@ -1029,5 +1029,213 @@ def admin_marquee_save():
     flash('Marquee disimpan.', 'success')
     return redirect(url_for('admin_notifikasi'))
 
+# ── Inbox / User Messages ──────────────────────────────────────────────────────
+
+def _get_inbox_messages(user_id):
+    """Ambil semua pesan untuk user: broadcast + personal."""
+    try:
+        sb = get_supabase()
+        # Pesan broadcast
+        broadcast = sb.table('user_messages') \
+            .select('*') \
+            .eq('target', 'all') \
+            .order('created_at', desc=True).execute().data or []
+
+        # Pesan personal ke user ini
+        personal = sb.table('user_messages') \
+            .select('*') \
+            .eq('target', 'user') \
+            .eq('to_user_id', str(user_id)) \
+            .order('created_at', desc=True).execute().data or []
+
+        # Gabungkan & sort by created_at desc
+        all_msgs = broadcast + personal
+        all_msgs.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+
+        # Cek status baca per pesan (tabel user_message_reads)
+        try:
+            reads = sb.table('user_message_reads') \
+                .select('message_id') \
+                .eq('user_id', str(user_id)).execute().data or []
+            read_ids = {r['message_id'] for r in reads}
+        except Exception:
+            read_ids = set()
+
+        for m in all_msgs:
+            m['is_read'] = m['id'] in read_ids
+
+        return all_msgs
+    except Exception:
+        return []
+
+
+def _get_unread_count(user_id):
+    if not user_id:
+        return 0
+    try:
+        msgs = _get_inbox_messages(user_id)
+        return sum(1 for m in msgs if not m.get('is_read'))
+    except Exception:
+        return 0
+
+
+@app.context_processor
+def inject_inbox_unread():
+    user_id = session.get('user_id')
+    count = _get_unread_count(user_id) if user_id else 0
+    return dict(inbox_unread_count=count)
+
+
+@app.route('/inbox')
+def user_inbox():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('user_login') + '?next=/inbox')
+    messages = _get_inbox_messages(user_id)
+    unread_count = sum(1 for m in messages if not m.get('is_read'))
+    return render_template('inbox.html', messages=messages, unread_count=unread_count)
+
+
+@app.route('/inbox/read/<int:msg_id>', methods=['POST'])
+def inbox_mark_read(msg_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'ok': False}), 401
+    try:
+        sb = get_supabase()
+        # Cek sudah ada atau belum
+        existing = sb.table('user_message_reads') \
+            .select('id').eq('user_id', str(user_id)).eq('message_id', msg_id).execute().data
+        if not existing:
+            sb.table('user_message_reads').insert({
+                'user_id': str(user_id),
+                'message_id': msg_id,
+                'read_at': datetime.now(timezone.utc).isoformat()
+            }).execute()
+    except Exception:
+        pass
+    return jsonify({'ok': True})
+
+
+@app.route('/inbox/read-all', methods=['POST'])
+def inbox_mark_all_read():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('user_login'))
+    try:
+        msgs = _get_inbox_messages(user_id)
+        sb = get_supabase()
+        for m in msgs:
+            if not m.get('is_read'):
+                try:
+                    sb.table('user_message_reads').insert({
+                        'user_id': str(user_id),
+                        'message_id': m['id'],
+                        'read_at': datetime.now(timezone.utc).isoformat()
+                    }).execute()
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    flash('Semua pesan ditandai sudah dibaca.', 'success')
+    return redirect(url_for('user_inbox'))
+
+
+# ── Admin: Kelola Pesan User ───────────────────────────────────────────────────
+
+@app.route('/admin/messages')
+@login_required
+def admin_messages():
+    try:
+        msgs = get_supabase().table('user_messages') \
+            .select('*').order('created_at', desc=True).execute().data or []
+
+        # Untuk pesan personal, ambil username dari tabel users
+        for m in msgs:
+            if m.get('target') == 'user' and m.get('to_user_id'):
+                try:
+                    u = get_supabase().table('users').select('username') \
+                        .eq('id', m['to_user_id']).single().execute().data
+                    m['to_username'] = u['username'] if u else m['to_user_id']
+                except Exception:
+                    m['to_username'] = m['to_user_id']
+            # Hitung berapa yang sudah baca (untuk broadcast)
+            if m.get('target') == 'all':
+                try:
+                    r = get_supabase().table('user_message_reads') \
+                        .select('id', count='exact').eq('message_id', m['id']).execute()
+                    m['read_count'] = r.count or 0
+                except Exception:
+                    m['read_count'] = 0
+    except Exception:
+        msgs = []
+    return render_template('admin/messages.html', messages=msgs)
+
+
+@app.route('/admin/messages/send', methods=['POST'])
+@login_required
+def admin_message_send():
+    target   = request.form.get('target', 'all')
+    to_user  = request.form.get('to_user', '').strip()
+    tipe     = request.form.get('tipe', 'info')
+    judul    = request.form.get('judul', '').strip()
+    isi      = request.form.get('isi', '').strip()
+    link     = request.form.get('link', '').strip()
+
+    if not judul or not isi:
+        flash('Judul dan isi pesan wajib diisi.', 'error')
+        return redirect(url_for('admin_messages'))
+
+    to_user_id = None
+    if target == 'user':
+        if not to_user:
+            flash('Username tujuan wajib diisi untuk pesan personal.', 'error')
+            return redirect(url_for('admin_messages'))
+        # Resolve username → id
+        try:
+            res = get_supabase().table('users').select('id').eq('username', to_user).execute()
+            if not res.data:
+                # Coba cari by id langsung
+                res2 = get_supabase().table('users').select('id').eq('id', to_user).execute()
+                if not res2.data:
+                    flash(f'User "{to_user}" tidak ditemukan.', 'error')
+                    return redirect(url_for('admin_messages'))
+                to_user_id = res2.data[0]['id']
+            else:
+                to_user_id = res.data[0]['id']
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'error')
+            return redirect(url_for('admin_messages'))
+
+    try:
+        get_supabase().table('user_messages').insert({
+            'target':     target,
+            'to_user_id': str(to_user_id) if to_user_id else None,
+            'tipe':       tipe,
+            'judul':      judul,
+            'isi':        isi,
+            'link':       link or None,
+            'created_at': datetime.now(timezone.utc).isoformat()
+        }).execute()
+        flash(f'Pesan berhasil dikirim{"ke semua user" if target == "all" else f" ke {to_user}"}.', 'success')
+    except Exception as e:
+        flash(f'Gagal kirim: {str(e)}', 'error')
+
+    return redirect(url_for('admin_messages'))
+
+
+@app.route('/admin/messages/delete/<int:msg_id>', methods=['POST'])
+@login_required
+def admin_message_delete(msg_id):
+    try:
+        # Hapus data reads dulu biar tidak orphan
+        get_supabase().table('user_message_reads').delete().eq('message_id', msg_id).execute()
+        get_supabase().table('user_messages').delete().eq('id', msg_id).execute()
+        flash('Pesan dihapus.', 'success')
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+    return redirect(url_for('admin_messages'))
+
+
 if __name__ == '__main__':
     app.run(debug=True)
