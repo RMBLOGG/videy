@@ -1,0 +1,179 @@
+{% extends 'admin/base.html' %}
+{% block title %}Pesan ke User — Admin{% endblock %}
+{% block head %}
+<style>
+  .msg-wrap{max-width:900px;margin:0 auto;padding:1.5rem 1rem}
+  .msg-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem}
+  .msg-card h3{font-size:.95rem;font-weight:700;margin-bottom:1.1rem;display:flex;align-items:center;gap:.5rem}
+  .f-label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.07em;margin-bottom:.35rem}
+  .f-input,.f-select,.f-textarea{width:100%;padding:.65rem .9rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.88rem;outline:none;box-sizing:border-box;transition:border-color .18s}
+  .f-input:focus,.f-select:focus,.f-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+  .f-textarea{resize:vertical;min-height:80px}
+  .f-row{margin-bottom:.9rem}
+  .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+  @media(max-width:560px){.f-grid{grid-template-columns:1fr}}
+  .type-radio{display:flex;gap:.5rem;flex-wrap:wrap}
+  .type-radio label{display:flex;align-items:center;gap:.4rem;padding:.45rem .85rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:500;transition:all .15s}
+  .type-radio input{display:none}
+  .type-radio input:checked+span{color:var(--accent)}
+  .type-radio label:has(input:checked){border-color:var(--accent);background:rgba(108,99,255,.1)}
+  #toUserWrap{display:none}
+
+  /* Table */
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;min-width:580px;border-collapse:collapse;font-size:.875rem}
+  th{padding:.7rem 1rem;text-align:left;font-size:.68rem;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)}
+  td{padding:.7rem 1rem;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .badge{display:inline-flex;align-items:center;gap:.3rem;border-radius:99px;padding:.18rem .65rem;font-size:.72rem;font-weight:700}
+  .badge-broadcast{background:rgba(251,191,36,.12);color:#fbbf24}
+  .badge-personal{background:rgba(108,99,255,.12);color:var(--accent2)}
+  .badge-info{background:rgba(96,165,250,.12);color:#60a5fa}
+  .badge-promo{background:rgba(74,222,128,.12);color:var(--green)}
+  .badge-warning{background:rgba(251,191,36,.12);color:#fbbf24}
+  .badge-system{background:rgba(107,107,138,.15);color:var(--muted2)}
+  .read-ratio{font-size:.78rem;color:var(--muted2)}
+  .del-btn{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.2);color:var(--red);border-radius:7px;padding:.3rem .65rem;cursor:pointer;font-size:.78rem}
+  .del-btn:hover{background:rgba(255,77,109,.2)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="msg-wrap">
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.75rem;padding-bottom:1.1rem;border-bottom:1px solid var(--border)">
+    <div style="width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;flex-shrink:0"><i class="fa fa-envelope"></i></div>
+    <div>
+      <h2 style="font-size:1.2rem;font-weight:800;margin:0;letter-spacing:-.02em">Pesan ke User</h2>
+      <p style="font-size:.78rem;color:var(--muted);margin:.1rem 0 0">Kirim notifikasi inbox ke semua atau user tertentu</p>
+    </div>
+  </div>
+
+  <!-- Compose -->
+  <div class="msg-card">
+    <h3><i class="fa fa-pen-to-square" style="color:var(--accent2)"></i> Buat Pesan Baru</h3>
+    <form method="POST" action="{{ url_for('admin_message_send') }}">
+
+      <div class="f-row">
+        <label class="f-label">Kirim ke</label>
+        <div class="type-radio" id="targetRadio">
+          <label>
+            <input type="radio" name="target" value="all" checked onchange="toggleTarget(this.value)">
+            <span>📢 Semua User (Broadcast)</span>
+          </label>
+          <label>
+            <input type="radio" name="target" value="user" onchange="toggleTarget(this.value)">
+            <span>👤 User Tertentu</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="f-row" id="toUserWrap">
+        <label class="f-label">Username atau ID User</label>
+        <input type="text" name="to_user" class="f-input" placeholder="Contoh: ramdan123 atau user ID"/>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem"><i class="fa fa-circle-info"></i> Masukkan username yang terdaftar</div>
+      </div>
+
+      <div class="f-grid">
+        <div class="f-row">
+          <label class="f-label">Tipe Pesan</label>
+          <select name="tipe" class="f-select">
+            <option value="info">ℹ️ Info</option>
+            <option value="promo">🎁 Promo</option>
+            <option value="warning">⚠️ Peringatan</option>
+            <option value="system">⚙️ Sistem</option>
+          </select>
+        </div>
+        <div class="f-row">
+          <label class="f-label">Judul</label>
+          <input type="text" name="judul" class="f-input" placeholder="Contoh: Voucher kamu hampir expired!" required maxlength="100"/>
+        </div>
+      </div>
+
+      <div class="f-row">
+        <label class="f-label">Isi Pesan</label>
+        <textarea name="isi" class="f-textarea" placeholder="Tulis isi pesan di sini..." required maxlength="500"></textarea>
+      </div>
+
+      <div class="f-row">
+        <label class="f-label">Link / CTA (opsional)</label>
+        <input type="text" name="link" class="f-input" placeholder="Contoh: /premium atau https://..."/>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">Kalau diisi, muncul tombol di pesan user</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-paper-plane"></i> Kirim Pesan</button>
+    </form>
+  </div>
+
+  <!-- History -->
+  <div class="msg-card" style="padding:0;overflow:hidden">
+    <div style="padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between">
+      <h3 style="margin:0;font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:.5rem">
+        <i class="fa fa-clock-rotate-left" style="color:var(--muted2)"></i> Riwayat Pesan
+      </h3>
+      <span style="font-size:.75rem;color:var(--muted)">{{ messages|length }} pesan terkirim</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Judul</th>
+            <th>Target</th>
+            <th>Tipe</th>
+            <th>Dibaca</th>
+            <th>Dikirim</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in messages %}
+          <tr>
+            <td>
+              <div style="font-weight:600;font-size:.85rem">{{ m.judul }}</div>
+              <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem">{{ m.isi[:60] }}{% if m.isi|length > 60 %}…{% endif %}</div>
+            </td>
+            <td>
+              {% if m.target == 'all' %}
+                <span class="badge badge-broadcast">📢 Broadcast</span>
+              {% else %}
+                <span class="badge badge-personal">👤 {{ m.to_username or m.to_user_id or '?' }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-{{ m.tipe }}">
+                {% if m.tipe == 'info' %}ℹ️{% elif m.tipe == 'promo' %}🎁{% elif m.tipe == 'warning' %}⚠️{% else %}⚙️{% endif %}
+                {{ m.tipe|capitalize }}
+              </span>
+            </td>
+            <td class="read-ratio">
+              {% if m.target == 'all' %}
+                {{ m.read_count or 0 }} user
+              {% else %}
+                {% if m.is_read %}<span style="color:var(--green)"><i class="fa fa-check"></i> Dibaca</span>{% else %}<span style="color:var(--muted)">Belum</span>{% endif %}
+              {% endif %}
+            </td>
+            <td style="font-size:.78rem;color:var(--muted2)">{{ m.created_at[:10] if m.created_at else '—' }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('admin_message_delete', msg_id=m.id) }}" onsubmit="return confirm('Hapus pesan ini?')">
+                <button type="submit" class="del-btn"><i class="fa fa-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align:center;padding:2.5rem;color:var(--muted)">
+              <i class="fa fa-envelope-open" style="font-size:1.5rem;display:block;margin-bottom:.5rem;opacity:.4"></i>
+              Belum ada pesan terkirim
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleTarget(val){
+  document.getElementById('toUserWrap').style.display = val === 'user' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
