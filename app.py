@@ -49,6 +49,7 @@ def get_client_ip():
 
 app.jinja_env.globals['format_wib'] = format_wib
 app.jinja_env.globals['categories'] = CATEGORIES
+app.jinja_env.globals['_is_noads_user'] = lambda: _is_noads(session.get('user_id')) if session.get('user_id') else False
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
@@ -191,7 +192,9 @@ def watch(video_id):
         except:
             pass
 
-        return render_template('watch.html', video=video, related=related, comments=comments, user_reaction=user_reaction)
+        return render_template('watch.html', video=video, related=related, comments=comments, user_reaction=user_reaction,
+                               is_premium=_is_premium(session.get('user_id')),
+                               perks=_get_user_perks(session.get('user_id')))
     except Exception as e:
         return render_template('404.html'), 404
 
@@ -685,6 +688,253 @@ def admin_folder_rename(folder_id):
     except Exception as e:
         flash(f'Error: {e}', 'error')
     return redirect(url_for('admin_folders'))
+
+# ── User Auth (Register / Login / Logout) — Manual Table ──────────────────────
+import hashlib, re as _re
+
+def _hash_password(pw):
+    """SHA-256 hash password."""
+    return hashlib.sha256(pw.encode()).hexdigest()
+
+def _valid_email(email):
+    return bool(_re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email))
+
+def _valid_username(u):
+    """Hanya huruf, angka, underscore, 3-20 karakter."""
+    return bool(_re.match(r'^[a-zA-Z0-9_]{3,20}$', u))
+
+@app.route('/daftar', methods=['GET', 'POST'])
+def user_register():
+    if session.get('user_id'):
+        return redirect(url_for('index'))
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email    = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '').strip()
+
+        # Validasi
+        if not username or not email or not password:
+            error = 'Semua field wajib diisi.'
+        elif not _valid_username(username):
+            error = 'Username hanya boleh huruf, angka, underscore (3–20 karakter).'
+        elif not _valid_email(email):
+            error = 'Format email tidak valid.'
+        elif len(password) < 6:
+            error = 'Password minimal 6 karakter.'
+        else:
+            sb = get_supabase()
+            # Cek duplikat username
+            cek_u = sb.table('users').select('id').eq('username', username).execute()
+            if cek_u.data:
+                error = 'Username sudah dipakai, coba yang lain.'
+            else:
+                # Cek duplikat email
+                cek_e = sb.table('users').select('id').eq('email', email).execute()
+                if cek_e.data:
+                    error = 'Email sudah terdaftar, silakan login.'
+                else:
+                    # Simpan ke tabel users
+                    new_user = sb.table('users').insert({
+                        'username': username,
+                        'email':    email,
+                        'password': _hash_password(password),
+                    }).execute()
+                    if new_user.data:
+                        user = new_user.data[0]
+                        session['user_id']       = user['id']
+                        session['user_username'] = user['username']
+                        session['user_email']    = user['email']
+                        return redirect(url_for('index'))
+                    else:
+                        error = 'Gagal menyimpan akun, coba lagi.'
+    return render_template('auth/register.html', error=error)
+
+@app.route('/masuk', methods=['GET', 'POST'])
+def user_login():
+    if session.get('user_id'):
+        return redirect(url_for('index'))
+    error = None
+    if request.method == 'POST':
+        login_field = request.form.get('login', '').strip().lower()
+        password    = request.form.get('password', '').strip()
+
+        if not login_field or not password:
+            error = 'Semua field wajib diisi.'
+        else:
+            sb = get_supabase()
+            # Cari berdasarkan email atau username
+            if '@' in login_field:
+                res = sb.table('users').select('*').eq('email', login_field).execute()
+            else:
+                res = sb.table('users').select('*').eq('username', login_field).execute()
+
+            if not res.data:
+                error = 'Akun tidak ditemukan.'
+            else:
+                user = res.data[0]
+                if user['password'] != _hash_password(password):
+                    error = 'Password salah.'
+                else:
+                    session['user_id']       = user['id']
+                    session['user_username'] = user['username']
+                    session['user_email']    = user['email']
+                    return redirect(url_for('index'))
+    return render_template('auth/login.html', error=error)
+
+@app.route('/keluar')
+def user_logout():
+    session.pop('user_id', None)
+    session.pop('user_username', None)
+    session.pop('user_email', None)
+    return redirect(url_for('index'))
+
+# ── Voucher & Premium System (2 Paket) ────────────────────────────────────────
+# Paket: "noads"    → no-ads selamanya (kolom noads_active = true)
+#        "download" → download 30 hari (kolom download_expires_at)
+
+def _get_user_perks(user_id):
+    if not user_id:
+        return {'noads': False, 'download': False, 'download_expires': None}
+    try:
+        res = get_supabase().table('user_premium') \
+            .select('noads_active, download_expires_at') \
+            .eq('user_id', user_id).execute()
+        if not res.data:
+            return {'noads': False, 'download': False, 'download_expires': None}
+        d     = res.data[0]
+        noads = bool(d.get('noads_active', False))
+        exp   = d.get('download_expires_at')
+        dl    = False
+        if exp:
+            exp_dt = datetime.fromisoformat(exp.replace('Z', '+00:00'))
+            dl = exp_dt > datetime.now(timezone.utc)
+        return {'noads': noads, 'download': dl, 'download_expires': exp[:10] if exp else None}
+    except Exception:
+        return {'noads': False, 'download': False, 'download_expires': None}
+
+def _is_noads(user_id):
+    return _get_user_perks(user_id)['noads']
+
+def _is_premium(user_id):
+    return _get_user_perks(user_id)['download']
+
+# ── User: halaman premium ──────────────────────────────────────────────────────
+@app.route('/premium')
+def premium_page():
+    user_id = session.get('user_id')
+    perks   = _get_user_perks(user_id)
+    return render_template('premium.html', perks=perks)
+
+# ── User: redeem voucher ───────────────────────────────────────────────────────
+@app.route('/premium/redeem', methods=['POST'])
+def premium_redeem():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Login dulu untuk redeem voucher.'}), 401
+
+    kode = request.form.get('kode', '').strip().upper()
+    if not kode:
+        return jsonify({'error': 'Kode voucher tidak boleh kosong.'}), 400
+
+    sb  = get_supabase()
+    now = datetime.now(timezone.utc)
+
+    res = sb.table('vouchers').select('*').eq('kode', kode).execute()
+    if not res.data:
+        return jsonify({'error': 'Kode voucher tidak ditemukan.'}), 404
+    v = res.data[0]
+    if v.get('used'):
+        return jsonify({'error': 'Kode voucher sudah pernah dipakai.'}), 400
+
+    tipe   = v.get('tipe', 'download')
+    durasi = v.get('durasi_hari', 30)
+
+    cek = sb.table('user_premium').select('*').eq('user_id', user_id).execute()
+
+    if tipe == 'noads':
+        upsert_data  = {'noads_active': True}
+        msg          = 'Berhasil! Iklan dimatikan selamanya.'
+        result_extra = {}
+    else:
+        if cek.data:
+            old_exp = cek.data[0].get('download_expires_at', '')
+            try:
+                old_dt = datetime.fromisoformat(old_exp.replace('Z', '+00:00'))
+                base = old_dt if old_dt > now else now
+            except Exception:
+                base = now
+        else:
+            base = now
+        new_exp      = (base + timedelta(days=durasi)).isoformat()
+        upsert_data  = {'download_expires_at': new_exp}
+        msg          = f'Berhasil! Download aktif {durasi} hari.'
+        result_extra = {'expires': new_exp[:10]}
+
+    if cek.data:
+        sb.table('user_premium').update(upsert_data).eq('user_id', user_id).execute()
+    else:
+        upsert_data['user_id'] = user_id
+        sb.table('user_premium').insert(upsert_data).execute()
+
+    sb.table('vouchers').update({
+        'used': True, 'used_by': user_id, 'used_at': now.isoformat()
+    }).eq('kode', kode).execute()
+
+    return jsonify({'ok': True, 'message': msg, 'tipe': tipe, **result_extra})
+
+# ── Download terlindungi premium download ─────────────────────────────────────
+@app.route('/download/<video_id>')
+def download_video(video_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('user_login') + '?next=' + request.path)
+    if not _is_premium(user_id):
+        return redirect(url_for('premium_page'))
+    try:
+        res = get_supabase().table('videos').select('video_url,title') \
+            .eq('id', video_id).single().execute()
+        if not res.data:
+            return 'Video tidak ditemukan.', 404
+        return redirect(res.data['video_url'])
+    except Exception:
+        return 'Terjadi kesalahan.', 500
+
+# ── Admin: kelola voucher ──────────────────────────────────────────────────────
+@app.route('/admin/voucher')
+@login_required
+def admin_voucher():
+    vouchers = get_supabase().table('vouchers').select('*') \
+        .order('created_at', desc=True).execute().data or []
+    return render_template('admin/voucher.html', vouchers=vouchers)
+
+@app.route('/admin/voucher/generate', methods=['POST'])
+@login_required
+def admin_voucher_generate():
+    import secrets, string
+    tipe   = request.form.get('tipe', 'download')
+    jumlah = min(int(request.form.get('jumlah', 1)), 50)
+    durasi = int(request.form.get('durasi_hari', 30))
+    prefix = 'NOADS' if tipe == 'noads' else 'DL'
+    alpha  = string.ascii_uppercase + string.digits
+    sb     = get_supabase()
+    for _ in range(jumlah):
+        kode = prefix + '-' + ''.join(secrets.choice(alpha) for _ in range(8))
+        sb.table('vouchers').insert({
+            'kode':        kode,
+            'tipe':        tipe,
+            'durasi_hari': durasi if tipe == 'download' else None,
+            'used':        False,
+        }).execute()
+    flash(f'{jumlah} voucher {tipe} berhasil dibuat.', 'success')
+    return redirect(url_for('admin_voucher'))
+
+@app.route('/admin/voucher/delete/<int:vid>', methods=['POST'])
+@login_required
+def admin_voucher_delete(vid):
+    get_supabase().table('vouchers').delete().eq('id', vid).execute()
+    flash('Voucher dihapus.', 'success')
+    return redirect(url_for('admin_voucher'))
 
 if __name__ == '__main__':
     app.run(debug=True)
