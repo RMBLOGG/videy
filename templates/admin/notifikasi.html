@@ -233,52 +233,56 @@
   }
   .icon-pick-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  .icon-picker-popup {
+  /* overlay gelap */
+  .icon-picker-overlay {
     display: none;
     position: fixed;
-    z-index: 9999;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0,0,0,.65);
+  }
+  .icon-picker-overlay.open { display: flex; align-items: flex-end; justify-content: center; }
+  /* popup sheet */
+  .icon-picker-popup {
     background: var(--surface);
     border: 1.5px solid var(--border);
-    border-radius: 14px;
-    padding: .75rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,.45);
-    width: 280px;
-  }
-  .icon-picker-popup.open { display: block; }
-  .icon-picker-search {
+    border-radius: 18px 18px 0 0;
+    padding: 1rem 1rem 1.5rem;
     width: 100%;
-    padding: .5rem .75rem;
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: .82rem;
-    outline: none;
-    box-sizing: border-box;
-    margin-bottom: .6rem;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -8px 40px rgba(0,0,0,.5);
+  }
+  .icon-picker-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: .75rem;
+  }
+  .icon-picker-head span { font-size: .9rem; font-weight: 700; }
+  .icon-picker-close-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: .75rem;
+  }
+  .icon-picker-search {
+    width: 100%; padding: .55rem .85rem;
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 9px; color: var(--text); font-size: .88rem;
+    outline: none; box-sizing: border-box; margin-bottom: .75rem; font-family: var(--font);
   }
   .icon-picker-search:focus { border-color: var(--accent); }
   .icon-picker-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    max-height: 220px;
-    overflow-y: auto;
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 5px; overflow-y: auto; flex: 1;
   }
-  .icon-picker-grid::-webkit-scrollbar { width: 4px; }
-  .icon-picker-grid::-webkit-scrollbar-track { background: transparent; }
-  .icon-picker-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   .ipi {
-    width: 34px; height: 34px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 7px;
-    cursor: pointer;
-    font-size: .9rem;
-    color: var(--muted);
-    transition: background .13s, color .13s;
-    border: 1.5px solid transparent;
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; cursor: pointer; font-size: 1.1rem; color: var(--muted2);
+    transition: background .13s, color .13s; border: 1.5px solid transparent;
+    min-height: 38px;
   }
-  .ipi:hover { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
+  .ipi:active { background: rgba(108,99,255,.2); color: var(--accent); border-color: var(--accent); }
 
   .nf-del-btn {
     width: 36px; height: 36px;
@@ -495,10 +499,16 @@
 
 </div>
 
-<!-- Icon Picker Popup -->
-<div class="icon-picker-popup" id="iconPickerPopup">
-  <input type="text" class="icon-picker-search" placeholder="Cari icon..." id="iconSearch" oninput="filterIcons(this.value)"/>
-  <div class="icon-picker-grid" id="iconGrid"></div>
+<!-- Icon Picker Overlay + Popup -->
+<div class="icon-picker-overlay" id="iconPickerOverlay">
+  <div class="icon-picker-popup" id="iconPickerPopup">
+    <div class="icon-picker-head">
+      <span><i class="fas fa-icons"></i> Pilih Icon</span>
+      <button type="button" class="icon-picker-close-btn" onclick="closePicker()"><i class="fas fa-times"></i></button>
+    </div>
+    <input type="text" class="icon-picker-search" placeholder="Cari icon..." id="iconSearch" oninput="filterIcons(this.value)"/>
+    <div class="icon-picker-grid" id="iconGrid"></div>
+  </div>
 </div>
 
 <script>
@@ -548,21 +558,18 @@ function filterIcons(q){
   buildGrid(filtered);
 }
 
-function filterIcons(q){
-  const filtered = FA_ICONS.filter(i => i.includes(q.toLowerCase()));
-  buildGrid(filtered);
-}
+
 
 function openPicker(btn){
   pickerTarget = btn;
-  const popup = document.getElementById('iconPickerPopup');
   document.getElementById('iconSearch').value = '';
   buildGrid(FA_ICONS);
-  const rect = btn.getBoundingClientRect();
-  popup.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
-  popup.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 296) + 'px';
-  popup.classList.add('open');
-  setTimeout(()=>document.getElementById('iconSearch').focus(), 50);
+  document.getElementById('iconPickerOverlay').classList.add('open');
+}
+
+function closePicker(){
+  document.getElementById('iconPickerOverlay').classList.remove('open');
+  pickerTarget = null;
 }
 
 function selectIcon(cls){
@@ -570,17 +577,12 @@ function selectIcon(cls){
   pickerTarget.querySelector('i').className = cls;
   const row = pickerTarget.closest('.nf-item-row');
   row.querySelector('input[name="icon[]"]').value = cls;
-  document.getElementById('iconPickerPopup').classList.remove('open');
+  closePicker();
   pickerTarget = null;
 }
 
-document.addEventListener('click', function(e){
-  const popup = document.getElementById('iconPickerPopup');
-  if(!popup.classList.contains('open')) return;
-  if(!popup.contains(e.target) && !e.target.closest('.icon-pick-btn')){
-    popup.classList.remove('open');
-    pickerTarget = null;
-  }
+document.getElementById('iconPickerOverlay').addEventListener('click', function(e){
+  if(e.target === this) closePicker();
 });
 
 function addItem(){
