@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Inbox — VIDEYsky{% endblock %}
+{% block head %}
+<style>
+  .inbox-wrap{max-width:680px;margin:0 auto;padding:1.75rem 1rem 3rem}
+  .inbox-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.75rem;padding-bottom:1.1rem;border-bottom:1px solid var(--border)}
+  .inbox-header h1{font-size:1.2rem;font-weight:800;margin:0;letter-spacing:-.02em}
+  .inbox-header .unread-badge{background:var(--accent);color:#fff;border-radius:99px;padding:.15rem .6rem;font-size:.72rem;font-weight:700}
+
+  .msg-item{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:1.1rem 1.25rem;margin-bottom:.65rem;
+    display:flex;gap:.9rem;align-items:flex-start;
+    transition:border-color .18s;cursor:pointer;text-decoration:none;color:inherit;
+    position:relative;
+  }
+  .msg-item:hover{border-color:var(--border2)}
+  .msg-item.unread{border-color:rgba(108,99,255,.35);background:rgba(108,99,255,.04)}
+  .msg-item.unread::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:12px 0 0 12px}
+
+  .msg-icon{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.95rem;flex-shrink:0;margin-top:.1rem;
+  }
+  .icon-info   {background:rgba(96,165,250,.15);color:#60a5fa}
+  .icon-promo  {background:rgba(74,222,128,.12);color:var(--green)}
+  .icon-warning{background:rgba(251,191,36,.12);color:#fbbf24}
+  .icon-system {background:rgba(107,107,138,.15);color:var(--muted2)}
+
+  .msg-body{flex:1;min-width:0}
+  .msg-judul{font-weight:700;font-size:.9rem;margin-bottom:.2rem;display:flex;align-items:center;gap:.5rem}
+  .msg-judul .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+  .msg-isi{font-size:.83rem;color:var(--muted2);line-height:1.5;margin-bottom:.5rem}
+  .msg-meta{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+  .msg-date{font-size:.72rem;color:var(--muted)}
+  .msg-link{display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:600;color:var(--accent2);text-decoration:none;padding:.25rem .65rem;background:rgba(108,99,255,.1);border-radius:99px;transition:background .15s}
+  .msg-link:hover{background:rgba(108,99,255,.2)}
+
+  .empty-inbox{text-align:center;padding:4rem 1rem;color:var(--muted)}
+  .empty-inbox i{font-size:2.5rem;opacity:.25;display:block;margin-bottom:.75rem}
+  .empty-inbox h3{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.3rem}
+
+  .mark-all-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);border-radius:8px;padding:.35rem .85rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
+  .mark-all-btn:hover{border-color:var(--accent);color:var(--accent)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="inbox-wrap">
+  <div class="inbox-header">
+    <div style="width:38px;height:38px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--accent2)">
+      <i class="fa fa-inbox"></i>
+    </div>
+    <div style="flex:1">
+      <h1>Inbox
+        {% if unread_count > 0 %}<span class="unread-badge">{{ unread_count }} baru</span>{% endif %}
+      </h1>
+      <p style="font-size:.78rem;color:var(--muted);margin:.1rem 0 0">Pesan dari VIDEYsky</p>
+    </div>
+    {% if unread_count > 0 %}
+    <form method="POST" action="{{ url_for('inbox_mark_all_read') }}">
+      <button type="submit" class="mark-all-btn"><i class="fa fa-check-double"></i> Tandai semua dibaca</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+    <div class="msg-item {% if not m.is_read %}unread{% endif %}"
+         onclick="markRead({{ m.id }}, this)">
+      <div class="msg-icon icon-{{ m.tipe }}">
+        {% if m.tipe == 'info' %}<i class="fa fa-circle-info"></i>
+        {% elif m.tipe == 'promo' %}<i class="fa fa-gift"></i>
+        {% elif m.tipe == 'warning' %}<i class="fa fa-triangle-exclamation"></i>
+        {% else %}<i class="fa fa-gear"></i>{% endif %}
+      </div>
+      <div class="msg-body">
+        <div class="msg-judul">
+          {% if not m.is_read %}<span class="dot"></span>{% endif %}
+          {{ m.judul }}
+        </div>
+        <div class="msg-isi">{{ m.isi }}</div>
+        <div class="msg-meta">
+          <span class="msg-date"><i class="fa fa-clock"></i> {{ m.created_at[:16].replace('T',' ') if m.created_at else '—' }}</span>
+          {% if m.link %}
+            <a href="{{ m.link }}" class="msg-link" onclick="event.stopPropagation()">
+              <i class="fa fa-arrow-right"></i> Lihat
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-inbox">
+      <i class="fa fa-envelope-open"></i>
+      <h3>Inbox kosong</h3>
+      <p style="font-size:.85rem">Tidak ada pesan saat ini.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+function markRead(msgId, el){
+  if(!el.classList.contains('unread')) return;
+  fetch('/inbox/read/' + msgId, {method:'POST'})
+    .then(()=>{
+      el.classList.remove('unread');
+      const dot = el.querySelector('.dot');
+      if(dot) dot.remove();
+      // update badge count
+      const badge = document.querySelector('.unread-badge');
+      if(badge){
+        const c = parseInt(badge.textContent) - 1;
+        if(c <= 0) badge.remove();
+        else badge.textContent = c + ' baru';
+      }
+    });
+}
+</script>
+{% endblock %}
