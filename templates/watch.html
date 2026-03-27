@@ -69,14 +69,16 @@
 {% block content %}
 
 <!-- Warning overlay -->
+{% if not session.get('user_id') or not _is_noads_user() %}
 <div class="warn-overlay" id="warnOverlay">
   <div class="warn-box">
     <div class="warn-icon">⚠️</div>
     <div class="warn-title">PERINGATAN</div>
     <div class="warn-text">Video ini mungkin berisi konten sensitif.<br>Klik tanda silang (X) di bawah untuk menutup peringatan ini dan menonton video.</div>
-    <a class="warn-close" href="https://www.profitablecpmratenetwork.com/hn5xg1311?key=73788c42896a7cfa8c0738b866b1517d" target="_blank" onclick="closeWarning()">✕</a>
+    <button class="warn-close" onclick="closeWarning()">✕</button>
   </div>
 </div>
+{% endif %}
 
 <div class="watch-wrap">
   <div>
