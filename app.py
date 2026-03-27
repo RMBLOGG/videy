@@ -840,51 +840,54 @@ def premium_redeem():
     if not kode:
         return jsonify({'error': 'Kode voucher tidak boleh kosong.'}), 400
 
-    sb  = get_supabase()
-    now = datetime.now(timezone.utc)
+    try:
+        sb  = get_supabase()
+        now = datetime.now(timezone.utc)
 
-    res = sb.table('vouchers').select('*').eq('kode', kode).execute()
-    if not res.data:
-        return jsonify({'error': 'Kode voucher tidak ditemukan.'}), 404
-    v = res.data[0]
-    if v.get('used'):
-        return jsonify({'error': 'Kode voucher sudah pernah dipakai.'}), 400
+        res = sb.table('vouchers').select('*').eq('kode', kode).execute()
+        if not res.data:
+            return jsonify({'error': 'Kode voucher tidak ditemukan.'}), 404
+        v = res.data[0]
+        if v.get('used'):
+            return jsonify({'error': 'Kode voucher sudah pernah dipakai.'}), 400
 
-    tipe   = v.get('tipe', 'download')
-    durasi = v.get('durasi_hari', 30)
+        tipe   = v.get('tipe', 'download')
+        durasi = v.get('durasi_hari', 30)
 
-    cek = sb.table('user_premium').select('*').eq('user_id', user_id).execute()
+        cek = sb.table('user_premium').select('*').eq('user_id', user_id).execute()
 
-    if tipe == 'noads':
-        upsert_data  = {'noads_active': True}
-        msg          = 'Berhasil! Iklan dimatikan selamanya.'
-        result_extra = {}
-    else:
-        if cek.data:
-            old_exp = cek.data[0].get('download_expires_at', '')
-            try:
-                old_dt = datetime.fromisoformat(old_exp.replace('Z', '+00:00'))
-                base = old_dt if old_dt > now else now
-            except Exception:
-                base = now
+        if tipe == 'noads':
+            upsert_data  = {'noads_active': True}
+            msg          = 'Berhasil! Iklan dimatikan selamanya.'
+            result_extra = {}
         else:
-            base = now
-        new_exp      = (base + timedelta(days=durasi)).isoformat()
-        upsert_data  = {'download_expires_at': new_exp}
-        msg          = f'Berhasil! Download aktif {durasi} hari.'
-        result_extra = {'expires': new_exp[:10]}
+            if cek.data:
+                old_exp = cek.data[0].get('download_expires_at', '')
+                try:
+                    old_dt = datetime.fromisoformat(old_exp.replace('Z', '+00:00'))
+                    base = old_dt if old_dt > now else now
+                except Exception:
+                    base = now
+            else:
+                base = now
+            new_exp      = (base + timedelta(days=durasi)).isoformat()
+            upsert_data  = {'download_expires_at': new_exp}
+            msg          = f'Berhasil! Download aktif {durasi} hari.'
+            result_extra = {'expires': new_exp[:10]}
 
-    if cek.data:
-        sb.table('user_premium').update(upsert_data).eq('user_id', user_id).execute()
-    else:
-        upsert_data['user_id'] = user_id
-        sb.table('user_premium').insert(upsert_data).execute()
+        if cek.data:
+            sb.table('user_premium').update(upsert_data).eq('user_id', user_id).execute()
+        else:
+            upsert_data['user_id'] = user_id
+            sb.table('user_premium').insert(upsert_data).execute()
 
-    sb.table('vouchers').update({
-        'used': True, 'used_by': user_id, 'used_at': now.isoformat()
-    }).eq('kode', kode).execute()
+        sb.table('vouchers').update({
+            'used': True, 'used_by': user_id, 'used_at': now.isoformat()
+        }).eq('kode', kode).execute()
 
-    return jsonify({'ok': True, 'message': msg, 'tipe': tipe, **result_extra})
+        return jsonify({'ok': True, 'message': msg, 'tipe': tipe, **result_extra})
+    except Exception as e:
+        return jsonify({'error': f'Debug: {str(e)}'}), 500
 
 # ── Download terlindungi premium download ─────────────────────────────────────
 @app.route('/download/<video_id>')
