@@ -2,94 +2,460 @@
 {% block title %}Kelola Notifikasi — Admin{% endblock %}
 {% block head %}
 <style>
-  .notif-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem}
-  .notif-card h3{font-size:1rem;font-weight:700;margin-bottom:1.1rem;display:flex;align-items:center;gap:.5rem}
-  .field-row{margin-bottom:.875rem}
-  .field-row label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem;letter-spacing:.07em}
-  .field-row input,.field-row textarea,.field-row select{width:100%;padding:.65rem .9rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;box-sizing:border-box}
-  .field-row input:focus,.field-row textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
-  .item-row{display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center;margin-bottom:.5rem}
-  .item-row input{margin:0}
-  .del-btn{background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.2);color:var(--red);border-radius:8px;padding:.5rem .7rem;cursor:pointer;font-size:.85rem;flex-shrink:0}
-  .del-btn:hover{background:rgba(255,77,109,.22)}
-  .add-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.85rem;font-weight:600;margin-top:.4rem}
-  .add-btn:hover{border-color:var(--accent);color:var(--accent)}
-  .col-header{font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.07em;padding-bottom:.25rem}
-  .toggle-wrap{display:flex;align-items:center;gap:.5rem;font-size:.9rem;cursor:pointer}
-  .save-btn{margin-top:.5rem}
+  /* ── Layout ── */
+  .nf-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1.75rem 1rem 3rem;
+  }
+
+  /* ── Page header ── */
+  .nf-header {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .nf-header-badge {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    color: #000;
+    flex-shrink: 0;
+  }
+  .nf-header h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -.02em;
+  }
+  .nf-header p {
+    font-size: .78rem;
+    color: var(--muted);
+    margin: .1rem 0 0;
+  }
+
+  /* ── Card ── */
+  .nf-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    transition: border-color .18s;
+  }
+  .nf-card:focus-within {
+    border-color: var(--accent);
+  }
+
+  .nf-card-head {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: 1.1rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .nf-card-head-icon {
+    font-size: .95rem;
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ic-purple { background: rgba(139,92,246,.15); color: #a78bfa; }
+  .ic-amber  { background: rgba(251,191,36,.12); color: #fbbf24; }
+
+  .nf-card-head h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -.01em;
+  }
+  .nf-card-head .nf-badge {
+    margin-left: auto;
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: .18rem .55rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .nf-card-body { padding: 1.4rem; }
+
+  /* ── Field ── */
+  .nf-field { margin-bottom: 1.1rem; }
+  .nf-label {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--muted);
+    margin-bottom: .4rem;
+  }
+  .nf-label i { font-size: .65rem; opacity: .7; }
+
+  .nf-input, .nf-select {
+    width: 100%;
+    padding: .7rem 1rem;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: .88rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .18s, box-shadow .18s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .nf-input:focus, .nf-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--glow);
+  }
+  .nf-input::placeholder { color: var(--muted); opacity: .5; }
+
+  .nf-select-wrap { position: relative; }
+  .nf-select-wrap::after {
+    content: '\f107';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    right: .9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+    font-size: .8rem;
+  }
+  .nf-select { padding-right: 2.2rem; cursor: pointer; }
+
+  /* ── Toggle ── */
+  .nf-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    cursor: pointer;
+    transition: border-color .18s;
+    user-select: none;
+  }
+  .nf-toggle-wrap:hover { border-color: var(--accent); }
+
+  /* custom toggle switch */
+  .nf-switch {
+    position: relative;
+    width: 36px; height: 20px;
+    flex-shrink: 0;
+  }
+  .nf-switch input { opacity: 0; width: 0; height: 0; }
+  .nf-switch-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 20px;
+    transition: background .2s;
+  }
+  .nf-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    left: 3px; top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+  }
+  .nf-switch input:checked + .nf-switch-slider { background: var(--accent); }
+  .nf-switch input:checked + .nf-switch-slider::before { transform: translateX(16px); }
+
+  .nf-toggle-text { font-size: .88rem; font-weight: 500; }
+  .nf-toggle-sub { font-size: .75rem; color: var(--muted); }
+
+  /* ── Marquee items ── */
+  .nf-col-headers {
+    display: grid;
+    grid-template-columns: 1fr 1fr 36px;
+    gap: .5rem;
+    margin-bottom: .35rem;
+  }
+  .nf-col-hdr {
+    font-size: .65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    padding-left: .2rem;
+  }
+
+  .nf-item-list { display: flex; flex-direction: column; gap: .45rem; }
+
+  .nf-item-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 36px;
+    gap: .5rem;
+    align-items: center;
+    animation: slideIn .18s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .nf-item-row .nf-input { margin: 0; }
+
+  .nf-del-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,77,109,.08);
+    border: 1.5px solid rgba(255,77,109,.2);
+    color: var(--red, #ff4d6d);
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: .8rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s;
+    flex-shrink: 0;
+  }
+  .nf-del-btn:hover {
+    background: rgba(255,77,109,.18);
+    border-color: rgba(255,77,109,.4);
+  }
+
+  /* ── Add button ── */
+  .nf-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    margin-top: .75rem;
+    padding: .55rem 1rem;
+    background: transparent;
+    border: 1.5px dashed var(--border);
+    border-radius: 9px;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .18s, color .18s;
+  }
+  .nf-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Divider ── */
+  .nf-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.25rem 0;
+  }
+
+  /* ── Save btn ── */
+  .nf-save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem 1.4rem;
+    background: var(--accent);
+    border: none;
+    border-radius: 9px;
+    color: #000;
+    font-family: var(--font);
+    font-size: .88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .18s, transform .1s;
+    letter-spacing: .01em;
+  }
+  .nf-save-btn:hover { opacity: .88; }
+  .nf-save-btn:active { transform: scale(.97); }
+
+  /* ── Preview banner strip ── */
+  .nf-preview-banner {
+    border-radius: 8px;
+    padding: .55rem .9rem;
+    font-size: .82rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .nf-preview-banner.info    { background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.25); color: #a78bfa; }
+  .nf-preview-banner.warning { background: rgba(251,191,36,.1);  border: 1px solid rgba(251,191,36,.25); color: #fbbf24; }
+  .nf-preview-banner.danger  { background: rgba(255,77,109,.1);  border: 1px solid rgba(255,77,109,.25); color: #ff4d6d; }
+  .nf-preview-banner.success { background: rgba(52,211,153,.1);  border: 1px solid rgba(52,211,153,.25); color: #34d399; }
+  .nf-preview-label {
+    font-size: .65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: .35rem;
+  }
 </style>
 {% endblock %}
 {% block content %}
-<div style="max-width:780px;margin:0 auto;padding:1.5rem 1rem">
-  <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:1.5rem"><i class="fa fa-bell"></i> Kelola Notifikasi</h2>
+<div class="nf-wrap">
 
-  <!-- BANNER -->
-  <div class="notif-card">
-    <h3><i class="fa fa-megaphone" style="color:var(--accent2)"></i> Banner Pengumuman</h3>
-    <form method="POST" action="{{ url_for('admin_banner_save') }}">
-      <div class="field-row">
-        <label>Teks Banner</label>
-        <input type="text" name="konten" value="{{ banner.konten if banner else '' }}" placeholder="🎉 Promo! Voucher No-Ads diskon 50% minggu ini."/>
-      </div>
-      <div class="field-row">
-        <label>Warna</label>
-        <select name="warna">
-          <option value="info"    {% if not banner or banner.warna=='info'    %}selected{% endif %}>🔵 Info (Ungu)</option>
-          <option value="warning" {% if banner and banner.warna=='warning' %}selected{% endif %}>🟡 Warning (Kuning)</option>
-          <option value="danger"  {% if banner and banner.warna=='danger'  %}selected{% endif %}>🔴 Danger (Merah)</option>
-          <option value="success" {% if banner and banner.warna=='success' %}selected{% endif %}>🟢 Success (Hijau)</option>
-        </select>
-      </div>
-      <label class="toggle-wrap" style="margin-bottom:1rem">
-        <input type="checkbox" name="aktif" value="1" {% if banner and banner.aktif %}checked{% endif %}>
-        Tampilkan banner
-      </label>
-      <br>
-      <button type="submit" class="btn btn-primary btn-sm save-btn"><i class="fa fa-save"></i> Simpan Banner</button>
-    </form>
+  <!-- Header -->
+  <div class="nf-header">
+    <div class="nf-header-badge"><i class="fa fa-bell"></i></div>
+    <div>
+      <h2>Kelola Notifikasi</h2>
+      <p>Atur banner pengumuman &amp; teks berjalan di halaman utama</p>
+    </div>
   </div>
 
-  <!-- MARQUEE -->
-  <div class="notif-card">
-    <h3><i class="fa fa-scroll" style="color:#fbbf24"></i> Teks Berjalan (Marquee)</h3>
-    <form method="POST" action="{{ url_for('admin_marquee_save') }}">
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;margin-bottom:.4rem">
-        <div class="col-header">Judul / Label</div>
-        <div class="col-header">Link (opsional)</div>
-        <div></div>
-      </div>
-      <div id="itemList">
-        {% for item in marquee_items %}
-        <div class="item-row">
-          <input type="text" name="judul[]" value="{{ item.judul }}" placeholder="misal: ⭐ Premium"/>
-          <input type="text" name="link[]"  value="{{ item.link }}"  placeholder="misal: /premium atau https://wa.me/..."/>
-          <button type="button" class="del-btn" onclick="this.closest('.item-row').remove()"><i class="fa fa-trash"></i></button>
+  <!-- ── BANNER ── -->
+  <div class="nf-card">
+    <div class="nf-card-head">
+      <div class="nf-card-head-icon ic-purple"><i class="fa fa-megaphone"></i></div>
+      <h3>Banner Pengumuman</h3>
+      <span class="nf-badge">Atas halaman</span>
+    </div>
+    <div class="nf-card-body">
+      <form method="POST" action="{{ url_for('admin_banner_save') }}">
+
+        <!-- live preview -->
+        <div class="nf-preview-label"><i class="fa fa-eye"></i> Preview</div>
+        <div class="nf-preview-banner info" id="bannerPreview">
+          <i class="fa fa-info-circle"></i>
+          <span id="bannerPreviewText">{{ banner.konten if banner else '🎉 Promo! Voucher No-Ads diskon 50% minggu ini.' }}</span>
         </div>
-        {% endfor %}
-      </div>
-      <button type="button" class="add-btn" onclick="addItem()"><i class="fa fa-plus"></i> Tambah Item</button>
-      <br><br>
-      <label class="toggle-wrap" style="margin-bottom:1rem">
-        <input type="checkbox" name="aktif" value="1" {% if marquee and marquee.aktif %}checked{% endif %}>
-        Tampilkan teks berjalan
-      </label>
-      <br>
-      <button type="submit" class="btn btn-primary btn-sm save-btn"><i class="fa fa-save"></i> Simpan Marquee</button>
-    </form>
+
+        <div class="nf-field">
+          <label class="nf-label"><i class="fa fa-align-left"></i> Teks Banner</label>
+          <input type="text" name="konten" class="nf-input" id="bannerInput"
+            value="{{ banner.konten if banner else '' }}"
+            placeholder="🎉 Promo! Voucher No-Ads diskon 50% minggu ini."/>
+        </div>
+
+        <div class="nf-field">
+          <label class="nf-label"><i class="fa fa-palette"></i> Warna</label>
+          <div class="nf-select-wrap">
+            <select name="warna" class="nf-select" id="bannerWarna">
+              <option value="info"    {% if not banner or banner.warna=='info'    %}selected{% endif %}>🔵 Info (Ungu)</option>
+              <option value="warning" {% if banner and banner.warna=='warning' %}selected{% endif %}>🟡 Warning (Kuning)</option>
+              <option value="danger"  {% if banner and banner.warna=='danger'  %}selected{% endif %}>🔴 Danger (Merah)</option>
+              <option value="success" {% if banner and banner.warna=='success' %}selected{% endif %}>🟢 Success (Hijau)</option>
+            </select>
+          </div>
+        </div>
+
+        <hr class="nf-divider">
+
+        <label class="nf-toggle-wrap" style="margin-bottom:1.25rem">
+          <span class="nf-switch">
+            <input type="checkbox" name="aktif" value="1" {% if banner and banner.aktif %}checked{% endif %}>
+            <span class="nf-switch-slider"></span>
+          </span>
+          <div>
+            <div class="nf-toggle-text">Tampilkan banner</div>
+            <div class="nf-toggle-sub">Banner akan muncul di atas semua halaman</div>
+          </div>
+        </label>
+
+        <button type="submit" class="nf-save-btn">
+          <i class="fa fa-save"></i> Simpan Banner
+        </button>
+      </form>
+    </div>
   </div>
+
+  <!-- ── MARQUEE ── -->
+  <div class="nf-card">
+    <div class="nf-card-head">
+      <div class="nf-card-head-icon ic-amber"><i class="fa fa-scroll"></i></div>
+      <h3>Teks Berjalan (Marquee)</h3>
+      <span class="nf-badge">Ticker bawah nav</span>
+    </div>
+    <div class="nf-card-body">
+      <form method="POST" action="{{ url_for('admin_marquee_save') }}">
+
+        <div class="nf-col-headers">
+          <div class="nf-col-hdr">Judul / Label</div>
+          <div class="nf-col-hdr">Link (opsional)</div>
+          <div></div>
+        </div>
+
+        <div class="nf-item-list" id="itemList">
+          {% for item in marquee_items %}
+          <div class="nf-item-row">
+            <input type="text" name="judul[]" class="nf-input" value="{{ item.judul }}" placeholder="misal: ⭐ Premium"/>
+            <input type="text" name="link[]"  class="nf-input" value="{{ item.link }}"  placeholder="misal: /premium"/>
+            <button type="button" class="nf-del-btn" onclick="this.closest('.nf-item-row').remove()" title="Hapus">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+
+        <button type="button" class="nf-add-btn" onclick="addItem()">
+          <i class="fa fa-plus"></i> Tambah Item
+        </button>
+
+        <hr class="nf-divider">
+
+        <label class="nf-toggle-wrap" style="margin-bottom:1.25rem">
+          <span class="nf-switch">
+            <input type="checkbox" name="aktif" value="1" {% if marquee and marquee.aktif %}checked{% endif %}>
+            <span class="nf-switch-slider"></span>
+          </span>
+          <div>
+            <div class="nf-toggle-text">Tampilkan teks berjalan</div>
+            <div class="nf-toggle-sub">Marquee aktif di seluruh halaman</div>
+          </div>
+        </label>
+
+        <button type="submit" class="nf-save-btn">
+          <i class="fa fa-save"></i> Simpan Marquee
+        </button>
+      </form>
+    </div>
+  </div>
+
 </div>
 
 <script>
 function addItem(){
   const row = document.createElement('div');
-  row.className = 'item-row';
+  row.className = 'nf-item-row';
   row.innerHTML = `
-    <input type="text" name="judul[]" placeholder="misal: 📱 WA Admin"/>
-    <input type="text" name="link[]"  placeholder="misal: https://wa.me/628..."/>
-    <button type="button" class="del-btn" onclick="this.closest('.item-row').remove()"><i class="fa fa-trash"></i></button>
+    <input type="text" name="judul[]" class="nf-input" placeholder="misal: 📱 WA Admin"/>
+    <input type="text" name="link[]"  class="nf-input" placeholder="misal: https://wa.me/628..."/>
+    <button type="button" class="nf-del-btn" onclick="this.closest('.nf-item-row').remove()" title="Hapus">
+      <i class="fa fa-trash"></i>
+    </button>
   `;
   document.getElementById('itemList').appendChild(row);
   row.querySelector('input').focus();
 }
+
+/* Live banner preview */
+const bannerInput = document.getElementById('bannerInput');
+const bannerWarna = document.getElementById('bannerWarna');
+const bannerPreview = document.getElementById('bannerPreview');
+const bannerPreviewText = document.getElementById('bannerPreviewText');
+
+function updatePreview(){
+  bannerPreviewText.textContent = bannerInput.value || 'Preview banner di sini...';
+  bannerPreview.className = 'nf-preview-banner ' + bannerWarna.value;
+  const icons = { info:'fa-info-circle', warning:'fa-exclamation-triangle', danger:'fa-times-circle', success:'fa-check-circle' };
+  bannerPreview.querySelector('i').className = 'fa ' + (icons[bannerWarna.value] || 'fa-info-circle');
+}
+bannerInput.addEventListener('input', updatePreview);
+bannerWarna.addEventListener('change', updatePreview);
+updatePreview();
 </script>
 {% endblock %}
