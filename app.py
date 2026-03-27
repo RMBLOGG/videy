@@ -1169,7 +1169,14 @@ def admin_messages():
                     m['read_count'] = 0
     except Exception:
         msgs = []
-    return render_template('admin/messages.html', messages=msgs)
+    # Load semua user untuk dropdown
+    users = []
+    try:
+        users = get_supabase().table('users').select('id,username,email') \
+            .order('username').execute().data or []
+    except Exception:
+        pass
+    return render_template('admin/messages.html', messages=msgs, users=users)
 
 
 @app.route('/admin/messages/send', methods=['POST'])
