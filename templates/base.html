@@ -148,20 +148,104 @@
 
     /* ── FOOTER ── */
     footer{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.78rem;border-top:1px solid var(--border);margin-top:4rem}
-    /* Site Banner */
-    .site-banner{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:.6rem 1.25rem;font-size:.875rem;font-weight:500;position:relative}
-    .site-banner--info{background:rgba(108,99,255,.15);color:var(--accent2);border-bottom:1px solid rgba(108,99,255,.25)}
-    .site-banner--warning{background:rgba(251,191,36,.12);color:#fbbf24;border-bottom:1px solid rgba(251,191,36,.25)}
-    .site-banner--danger{background:rgba(255,77,109,.12);color:var(--red);border-bottom:1px solid rgba(255,77,109,.25)}
-    .site-banner--success{background:rgba(74,222,128,.12);color:var(--green);border-bottom:1px solid rgba(74,222,128,.25)}
-    .site-banner-close{position:absolute;right:.75rem;background:none;border:none;color:inherit;cursor:pointer;opacity:.7;font-size:.9rem;padding:.2rem .4rem}
-    .site-banner-close:hover{opacity:1}
-    /* Marquee */
-    .site-marquee{overflow:hidden;background:var(--surface);border-bottom:1px solid var(--border);padding:.35rem 0;font-size:.8rem}
-    .site-marquee-inner{display:inline-flex;white-space:nowrap;animation:marquee 22s linear infinite}
-    .site-marquee-inner a{color:var(--accent2);text-decoration:none;font-weight:600}
-    .site-marquee-inner a:hover{text-decoration:underline}
-    @keyframes marquee{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
+    /* ── SITE BANNER ── */
+    .site-banner{
+      display:flex;align-items:center;justify-content:center;gap:.6rem;
+      padding:.6rem 3rem .6rem 1.25rem;
+      font-size:.82rem;font-weight:600;
+      position:relative;overflow:hidden;
+      letter-spacing:.01em;
+    }
+    /* shimmer sweep */
+    .site-banner::after{
+      content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;
+      background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.12) 50%,transparent 60%);
+      animation:bannerShimmer 3.5s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes bannerShimmer{0%,100%{left:-60%}50%{left:120%}}
+
+    .site-banner--info{
+      background:linear-gradient(90deg,rgba(108,99,255,.22) 0%,rgba(167,139,250,.14) 100%);
+      color:#c4b5fd;
+      border-bottom:1px solid rgba(108,99,255,.3);
+      box-shadow:0 1px 0 rgba(108,99,255,.15);
+    }
+    .site-banner--warning{
+      background:linear-gradient(90deg,rgba(251,191,36,.18) 0%,rgba(245,158,11,.1) 100%);
+      color:#fde68a;
+      border-bottom:1px solid rgba(251,191,36,.3);
+    }
+    .site-banner--danger{
+      background:linear-gradient(90deg,rgba(255,77,109,.18) 0%,rgba(239,68,68,.1) 100%);
+      color:#fca5a5;
+      border-bottom:1px solid rgba(255,77,109,.3);
+    }
+    .site-banner--success{
+      background:linear-gradient(90deg,rgba(74,222,128,.15) 0%,rgba(52,211,153,.08) 100%);
+      color:#86efac;
+      border-bottom:1px solid rgba(74,222,128,.25);
+    }
+    .site-banner-icon{font-size:.8rem;opacity:.85;flex-shrink:0}
+    .site-banner-close{
+      position:absolute;right:.6rem;top:50%;transform:translateY(-50%);
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+      color:inherit;cursor:pointer;opacity:.75;
+      font-size:.7rem;padding:0;
+      width:22px;height:22px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      transition:opacity .15s,background .15s;
+    }
+    .site-banner-close:hover{opacity:1;background:rgba(255,255,255,.15)}
+
+    /* ── MARQUEE ── */
+    .site-marquee{
+      overflow:hidden;
+      background:var(--bg2);
+      border-bottom:1px solid var(--border);
+      padding:0;
+      display:flex;align-items:stretch;
+    }
+    .site-marquee-label{
+      flex-shrink:0;
+      display:flex;align-items:center;gap:.4rem;
+      padding:.35rem .85rem;
+      background:var(--accent);
+      color:#fff;
+      font-size:.65rem;font-weight:800;
+      text-transform:uppercase;letter-spacing:.1em;
+      white-space:nowrap;
+      z-index:1;
+    }
+    .site-marquee-track{
+      flex:1;overflow:hidden;
+      display:flex;align-items:center;
+      padding:.3rem 0;
+      /* fade edges */
+      -webkit-mask:linear-gradient(90deg,transparent 0%,#000 4%,#000 96%,transparent 100%);
+      mask:linear-gradient(90deg,transparent 0%,#000 4%,#000 96%,transparent 100%);
+    }
+    .site-marquee-inner{
+      display:inline-flex;align-items:center;
+      white-space:nowrap;
+      animation:marquee 24s linear infinite;
+      font-size:.78rem;
+    }
+    .site-marquee-inner:hover{animation-play-state:paused}
+    .site-marquee-inner a,.site-marquee-inner span{
+      color:var(--muted2);text-decoration:none;font-weight:500;
+      padding:0 .1rem;
+      transition:color .15s;
+    }
+    .site-marquee-inner a{color:var(--accent2);font-weight:600}
+    .site-marquee-inner a:hover{color:var(--text);text-decoration:none}
+    .site-marquee-sep{
+      margin:0 .6rem;
+      color:var(--border2);
+      font-size:.6rem;
+      opacity:.6;
+    }
+    @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     footer a{color:var(--muted2);text-decoration:none}
 
     /* ── MODAL ── */
@@ -274,22 +358,30 @@
 
 {% if site_banner %}
 <div class="site-banner site-banner--{{ site_banner.warna }}" id="siteBanner">
+  {% if site_banner.warna == 'info' %}<i class="fa fa-circle-info site-banner-icon"></i>
+  {% elif site_banner.warna == 'warning' %}<i class="fa fa-triangle-exclamation site-banner-icon"></i>
+  {% elif site_banner.warna == 'danger' %}<i class="fa fa-circle-xmark site-banner-icon"></i>
+  {% elif site_banner.warna == 'success' %}<i class="fa fa-circle-check site-banner-icon"></i>
+  {% endif %}
   <span>{{ site_banner.konten|safe }}</span>
-  <button onclick="document.getElementById('siteBanner').style.display='none'" class="site-banner-close"><i class="fa fa-xmark"></i></button>
+  <button onclick="document.getElementById('siteBanner').remove()" class="site-banner-close" title="Tutup"><i class="fa fa-xmark"></i></button>
 </div>
 {% endif %}
 
 {% if site_marquee and site_marquee_items %}
 <div class="site-marquee">
-  <div class="site-marquee-inner">
-    {% for item in site_marquee_items %}
-      {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}>{{ item.judul }}</a>{% else %}<span>{{ item.judul }}</span>{% endif %}
-      &nbsp;&nbsp;•&nbsp;&nbsp;
-    {% endfor %}
-    {% for item in site_marquee_items %}
-      {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}>{{ item.judul }}</a>{% else %}<span>{{ item.judul }}</span>{% endif %}
-      &nbsp;&nbsp;•&nbsp;&nbsp;
-    {% endfor %}
+  <div class="site-marquee-label"><i class="fa fa-bolt"></i> Info</div>
+  <div class="site-marquee-track">
+    <div class="site-marquee-inner">
+      {% for item in site_marquee_items %}
+        {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}>{{ item.judul }}</a>{% else %}<span>{{ item.judul }}</span>{% endif %}
+        <span class="site-marquee-sep">◆</span>
+      {% endfor %}
+      {% for item in site_marquee_items %}
+        {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}>{{ item.judul }}</a>{% else %}<span>{{ item.judul }}</span>{% endif %}
+        <span class="site-marquee-sep">◆</span>
+      {% endfor %}
+    </div>
   </div>
 </div>
 {% endif %}
