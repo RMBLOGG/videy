@@ -1,0 +1,103 @@
+{% extends 'admin/base.html' %}
+{% block title %}Kelola Voucher — Admin{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:0 auto;padding:1.5rem 1rem">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem">
+    <h2 style="font-size:1.3rem;font-weight:800"><i class="fa fa-ticket"></i> Kelola Voucher</h2>
+  </div>
+
+  <!-- Generate form -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem">
+    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:1rem">Generate Voucher Baru</h3>
+    <form method="POST" action="{{ url_for('admin_voucher_generate') }}" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+      <div>
+        <label style="display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem">Tipe Paket</label>
+        <select name="tipe" id="tipeSelect" onchange="toggleDurasi(this.value)"
+          style="padding:.55rem .8rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);outline:none">
+          <option value="download">⬇️ Download (30 hari)</option>
+          <option value="noads">🚫 No-Ads (Selamanya)</option>
+        </select>
+      </div>
+      <div id="durasiWrap">
+        <label style="display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem">Durasi (hari)</label>
+        <input type="number" name="durasi_hari" value="30" min="1" max="365"
+          style="padding:.55rem .8rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);width:110px;outline:none"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem">Jumlah</label>
+        <input type="number" name="jumlah" value="1" min="1" max="50"
+          style="padding:.55rem .8rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);width:90px;outline:none"/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Generate</button>
+    </form>
+    <script>
+    function toggleDurasi(v){
+      document.getElementById('durasiWrap').style.display = v==='noads' ? 'none' : '';
+    }
+    </script>
+  </div>
+
+  <!-- Voucher table -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:.875rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700">Kode</th>
+          <th style="padding:.75rem 1rem;text-align:center;font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700">Tipe</th>
+          <th style="padding:.75rem 1rem;text-align:center;font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700">Durasi</th>
+          <th style="padding:.75rem 1rem;text-align:center;font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700">Status</th>
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700">Dipakai oleh</th>
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700">Tanggal</th>
+          <th style="padding:.75rem 1rem;text-align:center;font-size:.7rem;text-transform:uppercase;color:var(--muted);font-weight:700">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in vouchers %}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.7rem 1rem;font-family:var(--mono);font-size:.9rem;font-weight:600;letter-spacing:.04em">
+            {{ v.kode }}
+            <button onclick="navigator.clipboard.writeText('{{ v.kode }}')" title="Salin"
+              style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;margin-left:.3rem">
+              <i class="fa fa-copy"></i>
+            </button>
+          </td>
+          <td style="padding:.7rem 1rem;text-align:center">
+            {% if v.tipe == 'noads' %}
+              <span style="background:rgba(251,191,36,.12);color:#fbbf24;border-radius:99px;padding:.2rem .7rem;font-size:.75rem;font-weight:700">🚫 No-Ads</span>
+            {% else %}
+              <span style="background:rgba(108,99,255,.12);color:var(--accent2);border-radius:99px;padding:.2rem .7rem;font-size:.75rem;font-weight:700">⬇️ Download</span>
+            {% endif %}
+          </td>
+          <td style="padding:.7rem 1rem;text-align:center;color:var(--muted2)">{{ v.durasi_hari|string + ' hari' if v.durasi_hari else '∞' }}</td>
+          <td style="padding:.7rem 1rem;text-align:center">
+            {% if v.used %}
+              <span style="background:rgba(107,107,138,.15);color:var(--muted2);border-radius:99px;padding:.2rem .7rem;font-size:.75rem;font-weight:700">Terpakai</span>
+            {% else %}
+              <span style="background:rgba(74,222,128,.12);color:var(--green);border-radius:99px;padding:.2rem .7rem;font-size:.75rem;font-weight:700">Tersedia</span>
+            {% endif %}
+          </td>
+          <td style="padding:.7rem 1rem;color:var(--muted);font-size:.8rem">{{ v.used_by or '—' }}</td>
+          <td style="padding:.7rem 1rem;color:var(--muted);font-size:.8rem">
+            {{ v.used_at[:10] if v.used_at else (v.created_at[:10] if v.created_at else '—') }}
+          </td>
+          <td style="padding:.7rem 1rem;text-align:center">
+            {% if not v.used %}
+            <form method="POST" action="{{ url_for('admin_voucher_delete', vid=v.id) }}"
+              onsubmit="return confirm('Hapus voucher {{ v.kode }}?')">
+              <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" style="padding:2rem;text-align:center;color:var(--muted)">
+            Belum ada voucher. Generate sekarang!
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
