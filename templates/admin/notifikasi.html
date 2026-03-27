@@ -189,7 +189,7 @@
   /* ── Marquee items ── */
   .nf-col-headers {
     display: grid;
-    grid-template-columns: 1fr 1fr 36px;
+    grid-template-columns: 36px 1fr 1fr 36px;
     gap: .5rem;
     margin-bottom: .35rem;
   }
@@ -206,7 +206,7 @@
 
   .nf-item-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 36px;
+    grid-template-columns: 36px 1fr 1fr 36px;
     gap: .5rem;
     align-items: center;
     animation: slideIn .18s ease;
@@ -216,6 +216,69 @@
     to   { opacity: 1; transform: translateY(0); }
   }
   .nf-item-row .nf-input { margin: 0; }
+
+  /* ── Icon Picker ── */
+  .icon-pick-btn {
+    width: 36px; height: 36px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-size: .95rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .18s;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .icon-pick-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .icon-picker-popup {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: .75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,.45);
+    width: 280px;
+  }
+  .icon-picker-popup.open { display: block; }
+  .icon-picker-search {
+    width: 100%;
+    padding: .5rem .75rem;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: .82rem;
+    outline: none;
+    box-sizing: border-box;
+    margin-bottom: .6rem;
+  }
+  .icon-picker-search:focus { border-color: var(--accent); }
+  .icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .icon-picker-grid::-webkit-scrollbar { width: 4px; }
+  .icon-picker-grid::-webkit-scrollbar-track { background: transparent; }
+  .icon-picker-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .ipi {
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: .9rem;
+    color: var(--muted);
+    transition: background .13s, color .13s;
+    border: 1.5px solid transparent;
+  }
+  .ipi:hover { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
 
   .nf-del-btn {
     width: 36px; height: 36px;
@@ -384,6 +447,7 @@
       <form method="POST" action="{{ url_for('admin_marquee_save') }}">
 
         <div class="nf-col-headers">
+          <div class="nf-col-hdr">Icon</div>
           <div class="nf-col-hdr">Judul / Label</div>
           <div class="nf-col-hdr">Link (opsional)</div>
           <div></div>
@@ -392,7 +456,11 @@
         <div class="nf-item-list" id="itemList">
           {% for item in marquee_items %}
           <div class="nf-item-row">
-            <input type="text" name="judul[]" class="nf-input" value="{{ item.judul }}" placeholder="misal: ⭐ Premium"/>
+            <button type="button" class="icon-pick-btn" onclick="openPicker(this)" title="Pilih Icon">
+              <i class="{{ item.icon if item.icon else 'fa fa-star' }}"></i>
+            </button>
+            <input type="hidden" name="icon[]" value="{{ item.icon if item.icon else 'fa fa-star' }}"/>
+            <input type="text" name="judul[]" class="nf-input" value="{{ item.judul }}" placeholder="misal: Premium"/>
             <input type="text" name="link[]"  class="nf-input" value="{{ item.link }}"  placeholder="misal: /premium"/>
             <button type="button" class="nf-del-btn" onclick="this.closest('.nf-item-row').remove()" title="Hapus">
               <i class="fa fa-trash"></i>
@@ -427,19 +495,97 @@
 
 </div>
 
+<!-- Icon Picker Popup -->
+<div class="icon-picker-popup" id="iconPickerPopup">
+  <input type="text" class="icon-picker-search" placeholder="Cari icon..." id="iconSearch" oninput="filterIcons(this.value)"/>
+  <div class="icon-picker-grid" id="iconGrid"></div>
+</div>
+
 <script>
+const FA_ICONS = [
+  'fa-star','fa-heart','fa-bolt','fa-fire','fa-crown','fa-gem','fa-gift','fa-bell',
+  'fa-check','fa-check-circle','fa-info-circle','fa-exclamation-circle','fa-exclamation-triangle',
+  'fa-times-circle','fa-ban','fa-lock','fa-unlock','fa-shield-alt','fa-user','fa-users',
+  'fa-user-shield','fa-user-check','fa-user-plus','fa-phone','fa-phone-alt','fa-mobile-alt',
+  'fa-envelope','fa-comment','fa-comments','fa-comment-dots','fa-paper-plane',
+  'fa-link','fa-external-link-alt','fa-share-alt','fa-globe','fa-wifi',
+  'fa-home','fa-store','fa-shopping-cart','fa-tag','fa-tags','fa-percent',
+  'fa-money-bill','fa-money-bill-wave','fa-coins','fa-credit-card','fa-wallet',
+  'fa-video','fa-film','fa-play','fa-play-circle','fa-tv','fa-camera','fa-photo-video',
+  'fa-music','fa-headphones','fa-microphone','fa-podcast',
+  'fa-trophy','fa-medal','fa-award','fa-flag','fa-rocket','fa-magic',
+  'fa-thumbs-up','fa-thumbs-down','fa-hand-point-right','fa-hand-peace',
+  'fa-download','fa-upload','fa-cloud','fa-cloud-download-alt','fa-cloud-upload-alt',
+  'fa-cog','fa-tools','fa-wrench','fa-code','fa-terminal','fa-database',
+  'fa-chart-bar','fa-chart-line','fa-chart-pie','fa-poll',
+  'fa-map-marker-alt','fa-map','fa-compass','fa-directions',
+  'fa-calendar','fa-calendar-alt','fa-clock','fa-history',
+  'fa-search','fa-filter','fa-list','fa-th','fa-th-large',
+  'fa-whatsapp','fa-facebook','fa-instagram','fa-twitter','fa-youtube','fa-telegram-plane',
+  'fab fa-whatsapp','fab fa-facebook','fab fa-instagram','fab fa-youtube','fab fa-telegram-plane'
+];
+
+let pickerTarget = null;
+
+function buildGrid(icons){
+  const grid = document.getElementById('iconGrid');
+  grid.innerHTML = icons.map(ic => {
+    const cls = ic.startsWith('fab ') ? ic : 'fa ' + ic;
+    return `<div class="ipi" title="${ic}" onclick="selectIcon('${cls}')"><i class="${cls}"></i></div>`;
+  }).join('');
+}
+
+function filterIcons(q){
+  const filtered = FA_ICONS.filter(i => i.includes(q.toLowerCase()));
+  buildGrid(filtered);
+}
+
+function openPicker(btn){
+  pickerTarget = btn;
+  const popup = document.getElementById('iconPickerPopup');
+  document.getElementById('iconSearch').value = '';
+  buildGrid(FA_ICONS);
+  const rect = btn.getBoundingClientRect();
+  popup.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+  popup.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 296) + 'px';
+  popup.classList.add('open');
+  setTimeout(()=>document.getElementById('iconSearch').focus(), 50);
+}
+
+function selectIcon(cls){
+  if(!pickerTarget) return;
+  pickerTarget.querySelector('i').className = cls;
+  const row = pickerTarget.closest('.nf-item-row');
+  row.querySelector('input[name="icon[]"]').value = cls;
+  document.getElementById('iconPickerPopup').classList.remove('open');
+  pickerTarget = null;
+}
+
+document.addEventListener('click', function(e){
+  const popup = document.getElementById('iconPickerPopup');
+  if(!popup.classList.contains('open')) return;
+  if(!popup.contains(e.target) && !e.target.closest('.icon-pick-btn')){
+    popup.classList.remove('open');
+    pickerTarget = null;
+  }
+});
+
 function addItem(){
   const row = document.createElement('div');
   row.className = 'nf-item-row';
   row.innerHTML = `
-    <input type="text" name="judul[]" class="nf-input" placeholder="misal: 📱 WA Admin"/>
-    <input type="text" name="link[]"  class="nf-input" placeholder="misal: https://wa.me/628..."/>
+    <button type="button" class="icon-pick-btn" onclick="openPicker(this)" title="Pilih Icon">
+      <i class="fa fa-star"></i>
+    </button>
+    <input type="hidden" name="icon[]" value="fa fa-star"/>
+    <input type="text" name="judul[]" class="nf-input" placeholder="misal: Premium"/>
+    <input type="text" name="link[]"  class="nf-input" placeholder="misal: /premium"/>
     <button type="button" class="nf-del-btn" onclick="this.closest('.nf-item-row').remove()" title="Hapus">
       <i class="fa fa-trash"></i>
     </button>
   `;
   document.getElementById('itemList').appendChild(row);
-  row.querySelector('input').focus();
+  row.querySelector('input[name="judul[]"]').focus();
 }
 
 /* Live banner preview */
