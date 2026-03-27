@@ -148,6 +148,20 @@
 
     /* ── FOOTER ── */
     footer{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.78rem;border-top:1px solid var(--border);margin-top:4rem}
+    /* Site Banner */
+    .site-banner{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:.6rem 1.25rem;font-size:.875rem;font-weight:500;position:relative}
+    .site-banner--info{background:rgba(108,99,255,.15);color:var(--accent2);border-bottom:1px solid rgba(108,99,255,.25)}
+    .site-banner--warning{background:rgba(251,191,36,.12);color:#fbbf24;border-bottom:1px solid rgba(251,191,36,.25)}
+    .site-banner--danger{background:rgba(255,77,109,.12);color:var(--red);border-bottom:1px solid rgba(255,77,109,.25)}
+    .site-banner--success{background:rgba(74,222,128,.12);color:var(--green);border-bottom:1px solid rgba(74,222,128,.25)}
+    .site-banner-close{position:absolute;right:.75rem;background:none;border:none;color:inherit;cursor:pointer;opacity:.7;font-size:.9rem;padding:.2rem .4rem}
+    .site-banner-close:hover{opacity:1}
+    /* Marquee */
+    .site-marquee{overflow:hidden;background:var(--surface);border-bottom:1px solid var(--border);padding:.35rem 0;font-size:.8rem}
+    .site-marquee-inner{display:inline-flex;white-space:nowrap;animation:marquee 22s linear infinite}
+    .site-marquee-inner a{color:var(--accent2);text-decoration:none;font-weight:600}
+    .site-marquee-inner a:hover{text-decoration:underline}
+    @keyframes marquee{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
     footer a{color:var(--muted2);text-decoration:none}
 
     /* ── MODAL ── */
@@ -208,6 +222,11 @@
           <a href="{{ url_for('admin_voucher') }}" class="admin-dropdown-item">
             <i class="fa fa-ticket"></i> Voucher
           </a>
+          <a href="{{ url_for('admin_notifikasi') }}" class="admin-dropdown-item">
+            <i class="fa fa-bell"></i> Notifikasi
+          </a>
+            <i class="fa fa-ticket"></i> Voucher
+          </a>
           <div class="admin-dropdown-divider"></div>
           <a href="{{ url_for('admin_logout') }}" class="admin-dropdown-item danger">
             <i class="fa fa-sign-out"></i> Keluar
@@ -252,6 +271,23 @@
     {% endif %}
   </div>
 </nav>
+
+{% if site_banner %}
+<div class="site-banner site-banner--{{ site_banner.warna }}" id="siteBanner">
+  <span>{{ site_banner.konten|safe }}</span>
+  <button onclick="document.getElementById('siteBanner').style.display='none'" class="site-banner-close"><i class="fa fa-xmark"></i></button>
+</div>
+{% endif %}
+
+{% if site_marquee %}
+<div class="site-marquee">
+  <div class="site-marquee-inner">
+    <span>{{ site_marquee.konten|safe }}</span>
+    &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
+    <span>{{ site_marquee.konten|safe }}</span>
+  </div>
+</div>
+{% endif %}
 
 <!-- Mobile search overlay -->
 <form class="search-overlay" id="searchOverlay" action="{{ url_for('search') }}" method="get">
