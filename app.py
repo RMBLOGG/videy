@@ -942,5 +942,53 @@ def admin_voucher_delete(vid):
     flash('Voucher dihapus.', 'success')
     return redirect(url_for('admin_voucher'))
 
+# ── Notifikasi Sitewide ────────────────────────────────────────────────────────
+def _get_notifications():
+    try:
+        res = get_supabase().table('site_notifications').select('*').eq('aktif', True).execute()
+        return res.data or []
+    except Exception:
+        return []
+
+@app.context_processor
+def inject_notifications():
+    notifs = _get_notifications()
+    banner  = next((n for n in notifs if n['type'] == 'banner'),  None)
+    marquee = next((n for n in notifs if n['type'] == 'marquee'), None)
+    return dict(site_banner=banner, site_marquee=marquee)
+
+@app.route('/admin/notifikasi', methods=['GET'])
+@login_required
+def admin_notifikasi():
+    sb = get_supabase()
+    notifs = sb.table('site_notifications').select('*').order('id').execute().data or []
+    return render_template('admin/notifikasi.html', notifs=notifs)
+
+@app.route('/admin/notifikasi/save', methods=['POST'])
+@login_required
+def admin_notifikasi_save():
+    sb = get_supabase()
+    notif_id = request.form.get('id')
+    data = {
+        'konten': request.form.get('konten', '').strip(),
+        'warna':  request.form.get('warna', 'info'),
+        'aktif':  request.form.get('aktif') == '1',
+        'updated_at': datetime.now(timezone.utc).isoformat(),
+    }
+    if notif_id:
+        sb.table('site_notifications').update(data).eq('id', notif_id).execute()
+    else:
+        data['type'] = request.form.get('type', 'banner')
+        sb.table('site_notifications').insert(data).execute()
+    flash('Notifikasi disimpan.', 'success')
+    return redirect(url_for('admin_notifikasi'))
+
+@app.route('/admin/notifikasi/delete/<int:nid>', methods=['POST'])
+@login_required
+def admin_notifikasi_delete(nid):
+    get_supabase().table('site_notifications').delete().eq('id', nid).execute()
+    flash('Notifikasi dihapus.', 'success')
+    return redirect(url_for('admin_notifikasi'))
+
 if __name__ == '__main__':
     app.run(debug=True)
