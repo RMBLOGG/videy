@@ -105,6 +105,13 @@
           <a class="share-btn" href="https://wa.me/?text={{ video.title|urlencode }}%20{{ request.url|urlencode }}" target="_blank"><i class="fab fa-whatsapp"></i> WA</a>
           <a class="share-btn" href="https://twitter.com/intent/tweet?text={{ video.title|urlencode }}&url={{ request.url|urlencode }}" target="_blank"><i class="fab fa-x-twitter"></i></a>
           <button class="share-btn" onclick="copyLink()"><i class="fa fa-link"></i> Salin</button>
+          <a class="share-btn" href="{{ url_for('download_video', video_id=video.id) }}"
+            style="background:rgba(108,99,255,.15);border-color:var(--accent);color:var(--accent2)">
+            <i class="fa fa-download"></i> Download
+            {% if not session.get('user_id') or not is_premium %}
+            <span style="font-size:.65rem;background:rgba(251,191,36,.2);color:#fbbf24;border-radius:99px;padding:1px 6px;margin-left:2px">PRO</span>
+            {% endif %}
+          </a>
         </div>
         {% if session.get('logged_in') %}
         <a href="{{ url_for('admin_edit', video_id=video.id) }}" class="btn btn-ghost btn-sm"><i class="fa fa-pen"></i> Edit</a>

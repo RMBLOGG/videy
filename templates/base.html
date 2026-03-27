@@ -56,6 +56,7 @@
     .nav-actions{display:flex;align-items:center;gap:.25rem;flex-shrink:0}
     .nav-icon-btn{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--muted2);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;text-decoration:none;flex-shrink:0}
     .nav-icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+    @media(max-width:480px){.hide-mobile{display:none!important}}
     .nav-link{color:var(--muted2);text-decoration:none;font-size:.82rem;font-weight:500;padding:.35rem .7rem;border-radius:99px;transition:all .2s;white-space:nowrap;flex-shrink:0}
     .nav-link:hover{color:var(--text);background:var(--surface)}
 
@@ -159,7 +160,9 @@
   </style>
   {% block head %}{% endblock %}
 
+  {% if not session.get('user_id') or not _is_noads_user() %}
   <script src="https://pl28961791.profitablecpmratenetwork.com/7a/19/5b/7a195bb793c2fd4d87b80de17afd84ef.js"></script>
+  {% endif %}
 </head>
 <body>
 <nav>
@@ -202,6 +205,9 @@
           <a href="{{ url_for('admin_folders') }}" class="admin-dropdown-item">
             <i class="fa fa-folder"></i> Folder
           </a>
+          <a href="{{ url_for('admin_voucher') }}" class="admin-dropdown-item">
+            <i class="fa fa-ticket"></i> Voucher
+          </a>
           <div class="admin-dropdown-divider"></div>
           <a href="{{ url_for('admin_logout') }}" class="admin-dropdown-item danger">
             <i class="fa fa-sign-out"></i> Keluar
@@ -218,6 +224,31 @@
         <i class="fa fa-moon" id="themeIcon"></i>
       </button>
       <a href="{{ url_for('public_upload') }}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Upload</a>
+
+      {% if session.get('user_id') %}
+        <!-- User logged in -->
+        <div class="admin-hamburger" id="userHamburger">
+          <button class="admin-hamburger-btn" onclick="toggleUserMenu()" title="Akun kamu" style="width:auto;padding:0 .75rem;gap:.4rem;border-radius:99px;font-size:.8rem;font-weight:600">
+            <i class="fa fa-circle-user"></i>
+            <span class="hide-mobile">{{ session.get('user_username','Akun') }}</span>
+          </button>
+          <div class="admin-dropdown" id="userDropdown">
+            <div style="padding:.6rem 1rem .4rem;font-size:.75rem;color:var(--muted)">{{ session.get('user_email','') }}</div>
+            <div class="admin-dropdown-divider"></div>
+            <a href="{{ url_for('premium_page') }}" class="admin-dropdown-item">
+              <i class="fa fa-crown"></i> Premium
+            </a>
+            <div class="admin-dropdown-divider"></div>
+            <a href="{{ url_for('user_logout') }}" class="admin-dropdown-item danger">
+              <i class="fa fa-sign-out"></i> Keluar
+            </a>
+          </div>
+        </div>
+      {% else %}
+        <!-- Guest -->
+        <a href="{{ url_for('user_login') }}" class="btn btn-ghost btn-sm"><i class="fa fa-sign-in"></i> Masuk</a>
+        <a href="{{ url_for('user_register') }}" class="btn btn-primary btn-sm hide-mobile"><i class="fa fa-user-plus"></i> Daftar</a>
+      {% endif %}
     {% endif %}
   </div>
 </nav>
@@ -273,7 +304,16 @@ function closeAdminMenu(){
 document.addEventListener('click',function(e){
   const ham=document.getElementById('adminHamburger');
   if(ham&&!ham.contains(e.target))closeAdminMenu();
+  const uham=document.getElementById('userHamburger');
+  if(uham&&!uham.contains(e.target)){
+    const udd=document.getElementById('userDropdown');
+    if(udd)udd.classList.remove('open');
+  }
 });
+function toggleUserMenu(){
+  const dd=document.getElementById('userDropdown');
+  if(dd)dd.classList.toggle('open');
+}
 (function(){
   const t=localStorage.getItem('theme')||'dark';
   document.documentElement.setAttribute('data-theme',t);
