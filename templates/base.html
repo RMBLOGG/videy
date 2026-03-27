@@ -381,11 +381,11 @@
   <div class="site-marquee-track">
     <div class="site-marquee-inner">
       {% for item in site_marquee_items %}
-        {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}><i class="{{ item.icon if item.icon else 'fa fa-star' }}"></i> {{ item.judul }}</a>{% else %}<span><i class="{{ item.icon if item.icon else 'fa fa-star' }}"></i> {{ item.judul }}</span>{% endif %}
+        {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}><i class="{{ item.icon if item.icon else 'fas fa-star' }}"></i> {{ item.judul }}</a>{% else %}<span><i class="{{ item.icon if item.icon else 'fas fa-star' }}"></i> {{ item.judul }}</span>{% endif %}
         <span class="site-marquee-sep">◆</span>
       {% endfor %}
       {% for item in site_marquee_items %}
-        {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}><i class="{{ item.icon if item.icon else 'fa fa-star' }}"></i> {{ item.judul }}</a>{% else %}<span><i class="{{ item.icon if item.icon else 'fa fa-star' }}"></i> {{ item.judul }}</span>{% endif %}
+        {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}><i class="{{ item.icon if item.icon else 'fas fa-star' }}"></i> {{ item.judul }}</a>{% else %}<span><i class="{{ item.icon if item.icon else 'fas fa-star' }}"></i> {{ item.judul }}</span>{% endif %}
         <span class="site-marquee-sep">◆</span>
       {% endfor %}
     </div>
