@@ -279,12 +279,17 @@
 </div>
 {% endif %}
 
-{% if site_marquee %}
+{% if site_marquee and site_marquee_items %}
 <div class="site-marquee">
   <div class="site-marquee-inner">
-    <span>{{ site_marquee.konten|safe }}</span>
-    &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
-    <span>{{ site_marquee.konten|safe }}</span>
+    {% for item in site_marquee_items %}
+      {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}>{{ item.judul }}</a>{% else %}<span>{{ item.judul }}</span>{% endif %}
+      &nbsp;&nbsp;•&nbsp;&nbsp;
+    {% endfor %}
+    {% for item in site_marquee_items %}
+      {% if item.link %}<a href="{{ item.link }}" {% if item.link.startswith('http') %}target="_blank"{% endif %}>{{ item.judul }}</a>{% else %}<span>{{ item.judul }}</span>{% endif %}
+      &nbsp;&nbsp;•&nbsp;&nbsp;
+    {% endfor %}
   </div>
 </div>
 {% endif %}
