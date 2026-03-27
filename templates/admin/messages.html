@@ -67,9 +67,26 @@
       </div>
 
       <div class="f-row" id="toUserWrap">
-        <label class="f-label">Username atau ID User</label>
-        <input type="text" name="to_user" class="f-input" placeholder="Contoh: ramdan123 atau user ID"/>
-        <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem"><i class="fa fa-circle-info"></i> Masukkan username yang terdaftar</div>
+        <label class="f-label">Pilih User</label>
+        <div style="position:relative">
+          <input type="text" id="userSearch" class="f-input" placeholder="Ketik username untuk cari..."
+            autocomplete="off" oninput="filterUsers(this.value)" onfocus="showUserList()" />
+          <input type="hidden" name="to_user" id="toUserVal"/>
+          <div id="userListDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto;z-index:100;margin-top:3px;box-shadow:0 8px 24px rgba(0,0,0,.35)">
+            {% for u in users %}
+            <div class="user-opt" data-username="{{ u.username }}" data-id="{{ u.id }}"
+              onclick="selectUser('{{ u.username }}', '{{ u.id }}')"
+              style="padding:.55rem .85rem;cursor:pointer;font-size:.85rem;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid var(--border);transition:background .12s">
+              <i class="fa fa-circle-user" style="color:var(--muted2);font-size:.8rem"></i>
+              <span style="font-weight:600">{{ u.username }}</span>
+              <span style="color:var(--muted);font-size:.75rem;margin-left:auto">{{ u.email }}</span>
+            </div>
+            {% else %}
+            <div style="padding:.75rem;text-align:center;color:var(--muted);font-size:.82rem">Belum ada user terdaftar</div>
+            {% endfor %}
+          </div>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem" id="selectedUserInfo"></div>
       </div>
 
       <div class="f-grid">
@@ -173,7 +190,53 @@
 
 <script>
 function toggleTarget(val){
-  document.getElementById('toUserWrap').style.display = val === 'user' ? 'block' : 'none';
+  const wrap = document.getElementById('toUserWrap');
+  wrap.style.display = val === 'user' ? 'block' : 'none';
+  if(val !== 'user'){
+    document.getElementById('userSearch').value = '';
+    document.getElementById('toUserVal').value = '';
+    document.getElementById('selectedUserInfo').textContent = '';
+  }
 }
+
+function showUserList(){
+  document.getElementById('userListDrop').style.display = 'block';
+}
+
+function filterUsers(q){
+  const drop = document.getElementById('userListDrop');
+  drop.style.display = 'block';
+  const items = drop.querySelectorAll('.user-opt');
+  const ql = q.toLowerCase();
+  items.forEach(el => {
+    const name = el.dataset.username.toLowerCase();
+    el.style.display = name.includes(ql) ? '' : 'none';
+  });
+}
+
+function selectUser(username, id){
+  document.getElementById('userSearch').value = username;
+  document.getElementById('toUserVal').value = username;
+  document.getElementById('userListDrop').style.display = 'none';
+  document.getElementById('selectedUserInfo').innerHTML =
+    '<i class="fa fa-check" style="color:var(--green)"></i> Dipilih: <strong>' + username + '</strong>';
+}
+
+// Hover style
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.user-opt').forEach(el => {
+    el.addEventListener('mouseenter', () => el.style.background = 'var(--surface2)');
+    el.addEventListener('mouseleave', () => el.style.background = '');
+  });
+});
+
+// Klik di luar = tutup dropdown
+document.addEventListener('click', function(e){
+  const wrap = document.getElementById('toUserWrap');
+  if(wrap && !wrap.contains(e.target)){
+    const drop = document.getElementById('userListDrop');
+    if(drop) drop.style.display = 'none';
+  }
+});
 </script>
 {% endblock %}
