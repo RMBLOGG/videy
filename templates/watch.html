@@ -232,11 +232,7 @@ let counted=false;
 
 // ── Limit nonton untuk user free ──────────────────────────────────────────────
 if(!IS_PREMIUM){
-  let watchedSec = 0;
   let limitTriggered = false;
-  let watchInterval = null;
-  let watchLimit = 20; // default sebelum duration diketahui
-
   const vidEl = document.getElementById('mainVideo');
 
   function getLimit(){
@@ -244,38 +240,35 @@ if(!IS_PREMIUM){
     return (!isNaN(dur) && dur >= 60) ? 60 : 20;
   }
 
-  vidEl.addEventListener('loadedmetadata', function(){
-    watchLimit = getLimit();
-  });
-
   function showLimitPopup(){
     if(limitTriggered) return;
     limitTriggered = true;
-    clearInterval(watchInterval);
     vidEl.pause();
+    vidEl.currentTime = getLimit(); // kunci di posisi limit
     const msg = document.getElementById('premLimitMsg');
     if(msg){
-      const label = watchLimit >= 60 ? '1 menit' : watchLimit + ' detik';
+      const label = getLimit() >= 60 ? '1 menit' : getLimit() + ' detik';
       msg.textContent = 'Kamu sudah nonton ' + label + '. Upgrade ke Premium untuk nonton video tanpa batas!';
     }
     const overlay = document.getElementById('premLimitOverlay');
     if(overlay) overlay.style.display = 'flex';
   }
 
-  vidEl.addEventListener('play', function(){
+  vidEl.addEventListener('timeupdate', function(){
     if(limitTriggered) return;
-    clearInterval(watchInterval);
-    watchInterval = setInterval(function(){
-      if(!vidEl.paused && !vidEl.ended){
-        watchedSec++;
-        watchLimit = getLimit();
-        if(watchedSec >= watchLimit) showLimitPopup();
-      }
-    }, 1000);
+    if(isNaN(vidEl.duration)) return;
+    const limit = getLimit();
+    if(vidEl.currentTime >= limit) showLimitPopup();
   });
 
-  vidEl.addEventListener('pause', function(){ clearInterval(watchInterval); });
-  vidEl.addEventListener('ended', function(){ clearInterval(watchInterval); });
+  // Cegah user drag seekbar melewati limit
+  vidEl.addEventListener('seeking', function(){
+    if(limitTriggered) return;
+    const limit = getLimit();
+    if(!isNaN(vidEl.duration) && vidEl.currentTime > limit){
+      vidEl.currentTime = limit;
+    }
+  });
 }
 
 function skipLimit(){
