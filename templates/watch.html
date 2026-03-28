@@ -64,6 +64,16 @@
   .warn-text{color:rgba(255,255,255,.7);font-size:.875rem;line-height:1.6;margin-bottom:1.5rem}
   .warn-close{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:1.4rem;text-decoration:none;transition:background .2s}
   .warn-close:hover{background:rgba(255,255,255,.28)}
+  /* Premium limit popup */
+  .prem-limit-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:1rem}
+  .prem-limit-box{background:linear-gradient(135deg,#13131f,#1a1a2e);border:1px solid rgba(108,99,255,.35);border-radius:20px;padding:2rem 1.75rem;max-width:360px;width:100%;text-align:center;box-shadow:0 0 60px rgba(108,99,255,.2)}
+  .prem-limit-icon{font-size:3rem;margin-bottom:.75rem}
+  .prem-limit-title{font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:.5rem}
+  .prem-limit-sub{color:rgba(255,255,255,.6);font-size:.875rem;line-height:1.6;margin-bottom:1.5rem}
+  .prem-limit-btn{display:block;width:100%;padding:.85rem;background:linear-gradient(135deg,#6c63ff,#a78bfa);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;margin-bottom:.65rem;transition:opacity .2s}
+  .prem-limit-btn:hover{opacity:.88}
+  .prem-limit-skip{color:rgba(255,255,255,.35);font-size:.78rem;cursor:pointer;background:none;border:none;display:block;width:100%}
+  .prem-limit-skip:hover{color:rgba(255,255,255,.6)}
 </style>
 {% endblock %}
 {% block content %}
@@ -76,6 +86,18 @@
     <div class="warn-title">PERINGATAN</div>
     <div class="warn-text">Video ini mungkin berisi konten sensitif.<br>Klik tanda silang (X) di bawah untuk menutup peringatan ini dan menonton video.</div>
     <button class="warn-close" onclick="closeWarning()">✕</button>
+  </div>
+</div>
+{% endif %}
+
+{% if not is_premium and not session.get('logged_in') %}
+<div class="prem-limit-overlay" id="premLimitOverlay">
+  <div class="prem-limit-box">
+    <div class="prem-limit-icon">👑</div>
+    <div class="prem-limit-title">Batas Nonton Gratis</div>
+    <div class="prem-limit-sub" id="premLimitMsg">Kamu sudah nonton 1 menit. Upgrade ke Premium untuk nonton video tanpa batas!</div>
+    <a href="/premium" class="prem-limit-btn"><i class="fa fa-crown"></i> Upgrade Premium</a>
+    <button class="prem-limit-skip" onclick="skipLimit()">Nonton video lain</button>
   </div>
 </div>
 {% endif %}
@@ -205,7 +227,49 @@
 </div>
 <script>
 const VID='{{ video.id }}';
+const IS_PREMIUM = {{ 'true' if is_premium or session.get('logged_in') else 'false' }};
 let counted=false;
+
+// ── Limit nonton untuk user free ──────────────────────────────────────────────
+if(!IS_PREMIUM){
+  let watchedSec = 0;
+  let limitTriggered = false;
+  let watchInterval = null;
+
+  const vidEl = document.getElementById('mainVideo');
+
+  function showLimitPopup(limitSec){
+    if(limitTriggered) return;
+    limitTriggered = true;
+    vidEl.pause();
+    const msg = document.getElementById('premLimitMsg');
+    if(msg){
+      const mnt = limitSec >= 60 ? '1 menit' : limitSec + ' detik';
+      msg.textContent = 'Kamu sudah nonton ' + mnt + '. Upgrade ke Premium untuk nonton video tanpa batas!';
+    }
+    const overlay = document.getElementById('premLimitOverlay');
+    if(overlay) overlay.style.display = 'flex';
+  }
+
+  vidEl.addEventListener('play', function(){
+    if(limitTriggered) return;
+    watchInterval = setInterval(function(){
+      if(!vidEl.paused && !vidEl.ended){
+        watchedSec++;
+        const dur = vidEl.duration || 0;
+        const limit = dur >= 60 ? 60 : 20;
+        if(watchedSec >= limit) showLimitPopup(limit);
+      }
+    }, 1000);
+  });
+
+  vidEl.addEventListener('pause', function(){ clearInterval(watchInterval); });
+  vidEl.addEventListener('ended', function(){ clearInterval(watchInterval); });
+}
+
+function skipLimit(){
+  window.location.href = '/';
+}
 
 // Blokir klik kanan & long-press di video (mencegah popup download)
 (function(){
