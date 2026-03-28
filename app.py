@@ -820,7 +820,8 @@ def _is_noads(user_id):
     return _get_user_perks(user_id)['noads']
 
 def _is_premium(user_id):
-    return _get_user_perks(user_id)['download']
+    perks = _get_user_perks(user_id)
+    return perks['noads'] or perks['download']
 
 # ── User: halaman premium ──────────────────────────────────────────────────────
 @app.route('/premium')
