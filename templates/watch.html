@@ -90,7 +90,7 @@
 </div>
 {% endif %}
 
-{% if not is_premium and not session.get('logged_in') %}
+{% if not session.get('logged_in') and not is_premium %}
 <div class="prem-limit-overlay" id="premLimitOverlay">
   <div class="prem-limit-box">
     <div class="prem-limit-icon">👑</div>
@@ -235,17 +235,28 @@ if(!IS_PREMIUM){
   let watchedSec = 0;
   let limitTriggered = false;
   let watchInterval = null;
+  let watchLimit = 20; // default sebelum duration diketahui
 
   const vidEl = document.getElementById('mainVideo');
 
-  function showLimitPopup(limitSec){
+  function getLimit(){
+    const dur = vidEl.duration;
+    return (!isNaN(dur) && dur >= 60) ? 60 : 20;
+  }
+
+  vidEl.addEventListener('loadedmetadata', function(){
+    watchLimit = getLimit();
+  });
+
+  function showLimitPopup(){
     if(limitTriggered) return;
     limitTriggered = true;
+    clearInterval(watchInterval);
     vidEl.pause();
     const msg = document.getElementById('premLimitMsg');
     if(msg){
-      const mnt = limitSec >= 60 ? '1 menit' : limitSec + ' detik';
-      msg.textContent = 'Kamu sudah nonton ' + mnt + '. Upgrade ke Premium untuk nonton video tanpa batas!';
+      const label = watchLimit >= 60 ? '1 menit' : watchLimit + ' detik';
+      msg.textContent = 'Kamu sudah nonton ' + label + '. Upgrade ke Premium untuk nonton video tanpa batas!';
     }
     const overlay = document.getElementById('premLimitOverlay');
     if(overlay) overlay.style.display = 'flex';
@@ -253,12 +264,12 @@ if(!IS_PREMIUM){
 
   vidEl.addEventListener('play', function(){
     if(limitTriggered) return;
+    clearInterval(watchInterval);
     watchInterval = setInterval(function(){
       if(!vidEl.paused && !vidEl.ended){
         watchedSec++;
-        const dur = vidEl.duration || 0;
-        const limit = dur >= 60 ? 60 : 20;
-        if(watchedSec >= limit) showLimitPopup(limit);
+        watchLimit = getLimit();
+        if(watchedSec >= watchLimit) showLimitPopup();
       }
     }, 1000);
   });
