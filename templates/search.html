@@ -1,47 +1,39 @@
 {% extends 'base.html' %}
-{% block title %}Cari "{{ query }}" — VIDEY{% endblock %}
-{% block head %}
-<style>
-  .search-header{margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
-  .search-title{font-size:1.2rem;font-weight:700;letter-spacing:-.025em}
-  /* Category dropdown */
-  .cat-dropdown-wrap{position:relative;display:inline-block}
-  .cat-dropdown-btn{display:flex;align-items:center;gap:.5rem;padding:.38rem .9rem;border-radius:99px;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
-  .cat-dropdown-btn:hover,.cat-dropdown-btn.open{border-color:var(--accent);color:var(--accent2)}
-  .cat-dropdown-btn i.arrow{font-size:.65rem;transition:transform .2s;color:var(--muted)}
-  .cat-dropdown-btn.open i.arrow{transform:rotate(180deg)}
-  .cat-dropdown-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;min-width:180px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:.4rem;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:400;animation:dropIn .15s ease}
-  .cat-dropdown-menu.open{display:block}
-  @keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-  .cat-dropdown-item{display:block;padding:.48rem .75rem;border-radius:9px;color:var(--muted2);text-decoration:none;font-size:.83rem;font-weight:500;transition:all .15s}
-  .cat-dropdown-item:hover{background:var(--surface);color:var(--text)}
-  .cat-dropdown-item.active{background:rgba(108,99,255,.15);color:var(--accent2);font-weight:700}
-  .cat-dropdown-divider{height:1px;background:var(--border);margin:.3rem 0}
-</style>
-{% endblock %}
+{% block title %}Cari "{{ query }}" — VIDEYsky{% endblock %}
 {% block content %}
-<div class="container">
-  <div class="search-header">
-    <h2 class="search-title">
-      {% if query %}Hasil untuk "<span style="color:var(--accent2)">{{ query }}</span>"
-      <span style="font-size:.875rem;color:var(--muted);font-weight:400">— {{ videos|length }} video</span>{% else %}Ketik sesuatu untuk mencari{% endif %}
-    </h2>
+<div class="max-w-screen-xl mx-auto px-4 py-6">
 
-    <!-- Category dropdown -->
+  <!-- Search header -->
+  <div class="flex items-center justify-between gap-4 flex-wrap mb-6">
+    <div>
+      {% if query %}
+      <h2 class="font-display font-bold text-white text-xl tracking-tight">
+        Hasil untuk "<span class="text-amber-400">{{ query }}</span>"
+      </h2>
+      <p class="text-gray-600 text-sm mt-0.5">{{ videos|length }} video ditemukan</p>
+      {% else %}
+      <h2 class="font-display font-bold text-gray-500 text-xl">Ketik sesuatu untuk mencari</h2>
+      {% endif %}
+    </div>
+
     {% if query %}
-    <div class="cat-dropdown-wrap" id="catDropWrap">
-      <button class="cat-dropdown-btn {% if cat %}open{% endif %}" id="catDropBtn" onclick="toggleCatDrop()">
-        <i class="fa fa-filter" style="font-size:.7rem"></i>
+    <!-- Category dropdown -->
+    <div class="relative" id="catDropWrap">
+      <button onclick="toggleCatDrop()" id="catDropBtn"
+              class="flex items-center gap-2 px-4 py-2 bg-surface border border-white/10 rounded-full text-sm font-semibold text-gray-400 hover:border-amber-400/40 hover:text-white transition-all">
+        <i class="fa fa-filter text-xs text-amber-400/70"></i>
         {{ cat.capitalize() if cat else 'Semua Kategori' }}
-        <i class="fa fa-chevron-down arrow"></i>
+        <i class="fa fa-chevron-down text-xs text-gray-600 transition-transform" id="catArrow"></i>
       </button>
-      <div class="cat-dropdown-menu {% if cat %}open{% endif %}" id="catDropMenu">
-        <a href="{{ url_for('search', q=query) }}" class="cat-dropdown-item {% if not cat %}active{% endif %}">
+      <div id="catDropMenu" class="dropdown-menu absolute top-full right-0 mt-2 w-44 bg-ink border border-white/10 rounded-2xl p-1.5 shadow-2xl z-40">
+        <a href="{{ url_for('search', q=query) }}"
+           class="block px-3 py-2 rounded-xl text-sm transition-all {% if not cat %}bg-amber-400/10 text-amber-400 font-semibold{% else %}text-gray-400 hover:bg-surface hover:text-white{% endif %}">
           Semua Kategori
         </a>
-        <div class="cat-dropdown-divider"></div>
+        <div class="h-px bg-white/5 my-1"></div>
         {% for c in categories %}
-        <a href="{{ url_for('search', q=query, cat=c) }}" class="cat-dropdown-item {% if cat==c %}active{% endif %}">
+        <a href="{{ url_for('search', q=query, cat=c) }}"
+           class="block px-3 py-2 rounded-xl text-sm transition-all {% if cat==c %}bg-amber-400/10 text-amber-400 font-semibold{% else %}text-gray-400 hover:bg-surface hover:text-white{% endif %}">
           {{ c.capitalize() }}
         </a>
         {% endfor %}
@@ -51,37 +43,64 @@
   </div>
 
   {% if videos %}
-  <div class="video-grid">
+  <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
     {% for v in videos %}
-    <a href="{{ url_for('watch', video_id=v.id) }}" class="video-card">
-      <div class="video-thumb">
-        {% if v.thumbnail_url %}<img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy"/>
-        {% else %}<div class="thumb-placeholder">▶</div>{% endif %}
-        <div class="thumb-overlay"><div class="play-btn-circle"><svg viewBox="0 0 16 16"><polygon points="3,1 15,8 3,15"/></svg></div></div>
+    <a href="{{ url_for('watch', video_id=v.id) }}" class="vcard block bg-surface border border-white/5 rounded-xl overflow-hidden">
+      <div class="relative aspect-video bg-panel overflow-hidden">
+        {% if v.thumbnail_url %}
+        <img src="{{ v.thumbnail_url }}" alt="{{ v.title }}" loading="lazy" class="thumb-img w-full h-full object-cover"/>
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center text-gray-700 text-3xl"><i class="fa fa-film"></i></div>
+        {% endif %}
+        <div class="thumb-overlay absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center">
+          <div class="play-circle w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <i class="fa fa-play text-white text-sm ml-0.5"></i>
+          </div>
+        </div>
+        {% if v.duration %}
+        <span class="absolute bottom-1.5 right-1.5 bg-black/75 text-white text-xs font-bold px-1.5 py-0.5 rounded mono">
+          {% set m=(v.duration//60)|int %}{% set s=(v.duration%60)|int %}{{ '%d:%02d'|format(m,s) }}
+        </span>
+        {% endif %}
       </div>
-      <div class="video-info">
-        <div class="video-title">{{ v.title }}</div>
-        <div class="video-meta">{{ v.views or 0 }} views · {{ v.uploader_name or 'Anonymous' }}</div>
+      <div class="p-2.5">
+        <div class="font-semibold text-sm text-white leading-snug line-clamp-2 mb-1.5">{{ v.title }}</div>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-xs text-gray-500">{{ v.views or 0 }} views</span>
+          <span class="text-gray-700 text-xs">·</span>
+          <a href="/uploader/{{ v.uploader_name or 'Anonymous' }}" onclick="event.stopPropagation()" class="text-xs text-amber-400/80 hover:text-amber-400 transition-colors">{{ v.uploader_name or 'Anonymous' }}</a>
+          {% if v.category %}
+          <a href="{{ url_for('category', cat=v.category) }}" onclick="event.stopPropagation()"
+             class="text-xs px-1.5 py-0.5 rounded-full bg-amber-400/10 text-amber-400/80 border border-amber-400/20 hover:bg-amber-400/20 transition-all">{{ v.category }}</a>
+          {% endif %}
+        </div>
       </div>
     </a>
     {% endfor %}
   </div>
   {% elif query %}
-  <div class="empty-state"><div style="font-size:3rem;margin-bottom:1rem">🔍</div><h2>Tidak ada hasil</h2><p>Coba kata kunci lain.</p></div>
+  <div class="flex flex-col items-center justify-center py-20 text-gray-700">
+    <i class="fa fa-search text-5xl mb-4 text-gray-800"></i>
+    <h2 class="font-display font-bold text-lg text-gray-500 mb-1">Tidak ada hasil</h2>
+    <p class="text-sm text-gray-600">Coba kata kunci yang berbeda.</p>
+  </div>
   {% endif %}
 </div>
+{% endblock %}
+{% block scripts %}
 <script>
 function toggleCatDrop(){
-  const btn=document.getElementById('catDropBtn');
   const menu=document.getElementById('catDropMenu');
-  btn.classList.toggle('open');
+  const arrow=document.getElementById('catArrow');
   menu.classList.toggle('open');
+  arrow.style.transform=menu.classList.contains('open')?'rotate(180deg)':'';
 }
 document.addEventListener('click',function(e){
   const wrap=document.getElementById('catDropWrap');
   if(wrap&&!wrap.contains(e.target)){
-    document.getElementById('catDropBtn')?.classList.remove('open');
-    document.getElementById('catDropMenu')?.classList.remove('open');
+    const menu=document.getElementById('catDropMenu');
+    const arrow=document.getElementById('catArrow');
+    if(menu){menu.classList.remove('open');if(arrow)arrow.style.transform='';}
   }
 });
 </script>

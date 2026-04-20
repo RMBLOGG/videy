@@ -1,233 +1,187 @@
 {% extends 'base.html' %}
-{% block title %}Upload Video — VIDEY{% endblock %}
-{% block head %}
-<style>
-  .upload-page{max-width:680px;margin:0 auto;padding:1.5rem 1.25rem}
-  .page-header{margin-bottom:1.5rem}
-  .page-header h1{font-size:1.6rem;font-weight:800;letter-spacing:-.035em;margin-bottom:.3rem}
-  .page-header p{color:var(--muted2);font-size:.9rem}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.75rem}
-  .form-group{margin-bottom:1.25rem}
-  .form-group label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
-  .form-group input[type=text],.form-group textarea,.form-group select{width:100%;padding:.7rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;outline:none;color:var(--text);font-family:var(--font);font-size:.9rem;transition:border-color .2s,box-shadow .2s;resize:vertical}
-  .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
-  .form-group textarea{min-height:90px}
-  .drop-zone{border:2px dashed var(--border2);border-radius:12px;padding:1.75rem 1rem;text-align:center;cursor:pointer;position:relative;transition:all .2s}
-  .drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:rgba(108,99,255,.06)}
-  .drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-  .drop-zone .icon{font-size:1.75rem;margin-bottom:.5rem}
-  .drop-zone p{color:var(--muted2);font-size:.875rem}
-  .drop-zone .file-picked{margin-top:.5rem;color:var(--accent2);font-size:.82rem;font-weight:600;word-break:break-all}
-  /* Video preview inside drop zone */
-  .vid-preview-wrap{display:none;position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;width:100%;background:#000;margin-bottom:.5rem}
-  .vid-preview-wrap.show{display:block}
-  .vid-preview-wrap img{width:100%;height:100%;object-fit:cover;display:block}
-  .vid-preview-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.45)}
-  .vid-preview-overlay .play-icon{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;margin-bottom:.4rem}
-  .vid-preview-overlay .vid-fname{color:rgba(255,255,255,.85);font-size:.72rem;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.5);padding:0 .5rem;text-align:center;word-break:break-all}
-  .drop-zone.has-file{padding:.6rem;border-style:solid;border-color:var(--accent)}
-  .drop-zone.has-file .icon,.drop-zone.has-file>p{display:none}
-  .drop-zone.has-file input{z-index:2}
-  .thumb-preview-wrap{display:none;margin-top:.75rem;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:200px}
-  .thumb-preview-wrap.show{display:block}
-  .thumb-preview-wrap img{width:100%;height:100%;object-fit:cover}
-  .info-box{background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.2);border-radius:10px;padding:.875rem 1rem;margin-bottom:1.25rem;font-size:.85rem;color:var(--accent2);display:flex;gap:.6rem;align-items:flex-start}
-  .pending-box{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:.875rem 1rem;margin-bottom:1.25rem;font-size:.85rem;color:var(--yellow);display:flex;gap:.6rem;align-items:flex-start}
-  .progress-wrap{display:none;margin-top:1.25rem}
-  .progress-wrap.show{display:block}
-  .progress-lbl{font-size:.85rem;color:var(--muted2);margin-bottom:.5rem;font-weight:500}
-  .progress-track{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:.4rem}
-  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;width:0%;transition:width .25s}
-  .progress-pct{font-size:.78rem;color:var(--muted);font-family:var(--mono)}
-  .steps{display:flex;gap:.5rem;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap}
-  .step{font-size:.75rem;font-weight:600;padding:.3rem .75rem;border-radius:99px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);transition:all .3s}
-  .step.active{background:rgba(108,99,255,.15);color:var(--accent2);border-color:var(--accent)}
-  .step.done{background:rgba(74,222,128,.1);color:var(--green);border-color:rgba(74,222,128,.3)}
-  .step-arrow{color:var(--muted);font-size:.75rem}
-  .form-actions{display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap}
-  .submit-btn{background:var(--accent);color:#fff;border:none;border-radius:99px;padding:.65rem 1.75rem;font-family:var(--font);font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px var(--glow)}
-  .submit-btn:hover{opacity:.88;transform:translateY(-1px)}
-  .submit-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
-  .success-box{display:none;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:14px;padding:2rem;text-align:center;margin-top:1rem}
-  .success-box.show{display:block}
-</style>
-{% endblock %}
+{% block title %}Upload Video — VIDEYsky{% endblock %}
 {% block content %}
-<div class="upload-page">
-  <div class="page-header">
-    <h1>Upload Video</h1>
-    <p>Bagikan video kamu — gratis & tanpa akun.</p>
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="font-display font-black text-white text-3xl tracking-tight mb-1">Upload Video</h1>
+    <p class="text-gray-500 text-sm">Bagikan video kamu — gratis &amp; tanpa akun.</p>
   </div>
-  <div class="info-box"><span><i class="fa fa-bolt"></i></span><span>Video diupload langsung ke cloud — tidak ada batasan ukuran file.</span></div>
-  <div class="pending-box"><span><i class="fa fa-clock"></i></span><span>Video akan direview admin sebelum tampil di beranda. Biasanya selesai dalam beberapa menit.</span></div>
-  <div class="steps" id="stepsBar">
-    <span class="step active" id="step1">1 · Isi Info</span>
-    <span class="step-arrow">→</span>
-    <span class="step" id="step2">2 · Upload</span>
-    <span class="step-arrow">→</span>
-    <span class="step" id="step3">3 · Selesai</span>
+
+  <!-- Steps -->
+  <div class="flex items-center gap-2 mb-6 flex-wrap">
+    <span class="step-item px-3 py-1 rounded-full text-xs font-semibold border transition-all bg-amber-400/10 border-amber-400/30 text-amber-400" id="step1">1. File</span>
+    <i class="fa fa-chevron-right text-gray-700 text-xs"></i>
+    <span class="step-item px-3 py-1 rounded-full text-xs font-semibold border transition-all bg-surface border-white/10 text-gray-600" id="step2">2. Info</span>
+    <i class="fa fa-chevron-right text-gray-700 text-xs"></i>
+    <span class="step-item px-3 py-1 rounded-full text-xs font-semibold border transition-all bg-surface border-white/10 text-gray-600" id="step3">3. Upload</span>
   </div>
-  <div class="card" id="mainForm">
-    <div class="form-group">
-      <label>Judul Video *</label>
-      <input type="text" id="title" required placeholder="Masukkan judul video..."/>
+
+  <div class="bg-surface border border-white/5 rounded-2xl p-6">
+
+    <div class="flex items-center gap-2.5 bg-amber-400/8 border border-amber-400/20 rounded-xl p-3.5 mb-5 text-sm text-amber-400/90">
+      <i class="fa fa-circle-info shrink-0"></i>
+      <span>Upload video — gratis. Mendaftar akun opsional namun dianjurkan.</span>
     </div>
-    <div class="form-group">
-      <label>Nama Kamu <span style="color:var(--muted)">(opsional)</span></label>
-      <input type="text" id="uploader_name" placeholder="Nama atau Anonymous..."/>
-    </div>
-    <div class="form-group">
-      <label>Kategori</label>
-      <select id="category">
-        {% for c in categories %}<option value="{{ c }}">{{ c.capitalize() }}</option>{% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Tags <span style="color:var(--muted)">(pisahkan dengan koma)</span></label>
-      <input type="text" id="tags" placeholder="contoh: lucu, tutorial, vlog"/>
-    </div>
-    <div class="form-group">
-      <label>Deskripsi <span style="color:var(--muted)">(opsional)</span></label>
-      <textarea id="description" placeholder="Ceritakan tentang video ini..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>File Video * (MP4, WebM, MOV)</label>
-      <div class="drop-zone" id="vidDrop">
-        <input type="file" id="vidInput" accept="video/*"/>
-        <div class="vid-preview-wrap" id="vidPreview">
-          <img id="vidThumbImg" src="" alt="preview"/>
-          <div class="vid-preview-overlay">
-            <div class="play-icon"><i class="fa fa-play"></i></div>
-            <div class="vid-fname" id="vidName"></div>
+
+    <form id="uploadForm" method="POST" enctype="multipart/form-data">
+
+      <!-- Drop zone -->
+      <div class="mb-5">
+        <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">File Video</label>
+        <div id="dropZone" class="relative border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-amber-400/40 hover:bg-amber-400/5 transition-all">
+          <input type="file" name="video" accept="video/*" required id="videoInput"
+                 class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="onFileChange(this)"/>
+          <!-- Preview -->
+          <div id="vidPreviewWrap" class="hidden relative rounded-xl overflow-hidden aspect-video w-full bg-black mb-3">
+            <img id="vidThumbPreview" src="" alt="" class="w-full h-full object-cover"/>
+            <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+              <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2">
+                <i class="fa fa-play text-white ml-0.5"></i>
+              </div>
+              <span id="vidFileName" class="text-white/80 text-xs font-semibold px-2 text-center break-all"></span>
+            </div>
+          </div>
+          <div id="dropContent">
+            <div class="text-4xl mb-3 text-gray-700"><i class="fa fa-cloud-arrow-up"></i></div>
+            <p class="text-gray-500 text-sm">Klik atau seret file video ke sini</p>
+            <p class="text-gray-700 text-xs mt-1">MP4, WebM, MKV — maks. 500MB</p>
           </div>
         </div>
-        <div class="icon"><i class="fa fa-film"></i></div>
-        <p>Klik atau seret video ke sini</p>
       </div>
-    </div>
-    <div class="form-group">
-      <label>Thumbnail <span style="color:var(--muted)">(opsional — otomatis jika kosong)</span></label>
-      <div class="drop-zone" id="thumbDrop">
-        <input type="file" id="thumbInput" accept="image/*"/>
-        <div class="icon"><i class="fa fa-image"></i></div>
-        <p>Klik atau seret gambar thumbnail</p>
-        <div class="file-picked" id="thumbName"></div>
+
+      <!-- Thumbnail -->
+      <div class="mb-5">
+        <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Thumbnail <span class="normal-case text-gray-700 font-normal">(opsional)</span></label>
+        <input type="file" name="thumbnail" accept="image/*" id="thumbInput" onchange="onThumbChange(this)"
+               class="w-full bg-panel border border-white/5 rounded-xl px-4 py-2.5 text-sm text-gray-400 outline-none file:mr-3 file:bg-amber-400 file:text-black file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-xs file:font-bold cursor-pointer"/>
+        <div id="thumbPreviewWrap" class="hidden mt-2 rounded-lg overflow-hidden aspect-video max-w-[160px]">
+          <img id="thumbPreview" src="" class="w-full h-full object-cover"/>
+        </div>
       </div>
-      <div class="thumb-preview-wrap" id="thumbPreview"><img id="thumbPreviewImg" src="" alt="preview"/></div>
+
+      <!-- Title -->
+      <div class="mb-5">
+        <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Judul Video</label>
+        <input type="text" name="title" placeholder="Judul yang menarik perhatian..." required maxlength="120"
+               class="w-full bg-panel border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-amber-400/50 transition-all"/>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-5">
+        <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Deskripsi <span class="normal-case font-normal text-gray-700">(opsional)</span></label>
+        <textarea name="description" placeholder="Ceritakan tentang video kamu..." rows="3"
+                  class="w-full bg-panel border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-amber-400/50 transition-all resize-y"></textarea>
+      </div>
+
+      <!-- Category + Tags -->
+      <div class="grid grid-cols-2 gap-4 mb-5">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Kategori</label>
+          <select name="category"
+                  class="w-full bg-panel border border-white/5 rounded-xl px-4 py-3 text-sm text-gray-400 outline-none focus:border-amber-400/50 transition-all">
+            <option value="">Pilih kategori...</option>
+            {% for cat in ['hiburan','tutorial','gaming','musik','vlog','sport','lainnya'] %}
+            <option value="{{ cat }}">{{ cat.capitalize() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Tags</label>
+          <input type="text" name="tags" placeholder="tag1, tag2, tag3"
+                 class="w-full bg-panel border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-amber-400/50 transition-all"/>
+        </div>
+      </div>
+
+      <!-- Uploader name -->
+      <div class="mb-6">
+        <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Nama Uploader <span class="normal-case font-normal text-gray-700">(opsional)</span></label>
+        <input type="text" name="uploader_name" placeholder="Nama atau alias kamu"
+               class="w-full bg-panel border border-white/5 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-amber-400/50 transition-all"/>
+      </div>
+
+      <!-- Progress -->
+      <div id="progressWrap" class="hidden mb-5">
+        <p class="text-sm text-gray-500 mb-2 font-medium" id="progressLbl">Uploading...</p>
+        <div class="h-1.5 bg-panel rounded-full overflow-hidden mb-1">
+          <div id="progressFill" class="h-full bg-amber-400 rounded-full transition-all duration-300" style="width:0%"></div>
+        </div>
+        <span id="progressPct" class="text-xs text-gray-600 mono">0%</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 flex-wrap">
+        <button type="submit" id="submitBtn"
+                class="flex items-center gap-2 px-6 py-3 bg-accent text-black font-bold rounded-full hover:bg-glow transition-all shadow-glow">
+          <i class="fa fa-upload"></i> Upload Sekarang
+        </button>
+        <a href="{{ url_for('index') }}"
+           class="flex items-center gap-2 px-5 py-3 bg-panel border border-white/10 text-gray-400 text-sm font-semibold rounded-full hover:border-white/20 hover:text-white transition-all">
+          Batal
+        </a>
+      </div>
+    </form>
+
+    <!-- Success -->
+    <div id="successBox" class="hidden mt-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6 text-center">
+      <i class="fa fa-circle-check text-4xl text-emerald-400 mb-3 block"></i>
+      <h3 class="font-display font-bold text-white text-lg mb-1">Upload Berhasil!</h3>
+      <p class="text-gray-400 text-sm mb-4">Video kamu sedang diproses.</p>
+      <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-black text-sm font-bold rounded-full hover:bg-glow transition-all">
+        <i class="fa fa-home"></i> Kembali ke Beranda
+      </a>
     </div>
-    <div class="progress-wrap" id="progressWrap">
-      <div class="progress-lbl" id="progressLbl">Mempersiapkan...</div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      <div class="progress-pct" id="progressPct">0%</div>
-    </div>
-    <div class="form-actions">
-      <button class="submit-btn" id="submitBtn" onclick="startUpload()">Upload Video →</button>
-      <a href="{{ url_for('index') }}" class="btn btn-ghost">Batal</a>
-    </div>
-  </div>
-  <div class="success-box" id="successBox">
-    <div style="font-size:3rem;margin-bottom:.75rem">🎉</div>
-    <h3 style="color:var(--green);font-size:1.2rem;font-weight:700;margin-bottom:.4rem">Video berhasil diupload!</h3>
-    <p style="color:var(--muted2);font-size:.875rem" id="successMsg"></p>
-    <a href="{{ url_for('index') }}" class="btn btn-primary" style="margin-top:1.25rem">← Kembali ke Beranda</a>
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
 <script>
-const CLOUD_NAME="dzfkklsza", UPLOAD_PRESET="videy_unsigned";
-
-document.getElementById('vidInput').addEventListener('change',function(){
-  const file=this.files[0];
-  if(!file) return;
-  document.getElementById('vidName').textContent=file.name;
-  // Auto-detect judul dari nama file (hanya jika field judul masih kosong)
-  const titleInput=document.getElementById('title');
-  if(!titleInput.value.trim()){
-    let name=file.name.replace(/\.[^/.]+$/,'');
-    name=name.replace(/[_\-\.]+/g,' ').trim();
-    name=name.replace(/\s+/g,' ');
-    name=name.charAt(0).toUpperCase()+name.slice(1);
-    titleInput.value=name;
-    titleInput.dispatchEvent(new Event('input'));
-  }
-  // Capture frame preview dari video
+function onFileChange(input){
+  const file=input.files[0];
+  if(!file)return;
+  const wrap=document.getElementById('vidPreviewWrap');
+  const fname=document.getElementById('vidFileName');
+  const drop=document.getElementById('dropContent');
+  fname.textContent=file.name;
+  wrap.classList.remove('hidden');
+  drop.style.display='none';
+  // Generate thumb from video
   const url=URL.createObjectURL(file);
   const vid=document.createElement('video');
-  vid.src=url; vid.muted=true; vid.playsInline=true;
-  vid.addEventListener('loadeddata',function(){
-    vid.currentTime=Math.min(1, vid.duration*0.1);
-  });
-  vid.addEventListener('seeked',function(){
+  vid.src=url;vid.currentTime=1;vid.muted=true;
+  vid.addEventListener('seeked',()=>{
     const canvas=document.createElement('canvas');
-    canvas.width=vid.videoWidth||640; canvas.height=vid.videoHeight||360;
-    canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
-    document.getElementById('vidThumbImg').src=canvas.toDataURL('image/jpeg',0.8);
-    document.getElementById('vidPreview').classList.add('show');
-    document.getElementById('vidDrop').classList.add('has-file');
+    canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
+    canvas.getContext('2d').drawImage(vid,0,0);
+    document.getElementById('vidThumbPreview').src=canvas.toDataURL();
     URL.revokeObjectURL(url);
   });
-  vid.load();
-});
-document.getElementById('thumbInput').addEventListener('change',function(){
-  document.getElementById('thumbName').textContent=this.files[0]?.name||'';
-  if(this.files[0]){
-    const reader=new FileReader();
-    reader.onload=e=>{document.getElementById('thumbPreviewImg').src=e.target.result;document.getElementById('thumbPreview').classList.add('show')};
-    reader.readAsDataURL(this.files[0]);
-  }
-});
-['vidDrop','thumbDrop'].forEach(id=>{
-  const el=document.getElementById(id);
-  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
-  el.addEventListener('dragleave',()=>el.classList.remove('over'));
-  el.addEventListener('drop',()=>el.classList.remove('over'));
-});
-function setStep(n){['step1','step2','step3'].forEach((id,i)=>{const el=document.getElementById(id);el.className='step'+(i+1<n?' done':i+1===n?' active':'')})}
-function setProgress(pct,label){document.getElementById('progressFill').style.width=pct+'%';document.getElementById('progressPct').textContent=Math.round(pct)+'%';document.getElementById('progressLbl').textContent=label}
-async function uploadToCloudinary(file,resourceType,onProgress){
-  return new Promise((resolve,reject)=>{
-    const fd=new FormData();
-    fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);
-    fd.append('folder','videy/'+(resourceType==='video'?'videos':'thumbnails'));
-    const xhr=new XMLHttpRequest();
-    xhr.open('POST',`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`);
-    xhr.upload.addEventListener('progress',e=>{if(e.lengthComputable)onProgress(e.loaded/e.total*100)});
-    xhr.onload=()=>xhr.status===200?resolve(JSON.parse(xhr.responseText)):reject(new Error('Upload gagal'));
-    xhr.onerror=()=>reject(new Error('Koneksi gagal'));
-    xhr.send(fd);
-  });
+  // Steps
+  document.getElementById('step1').className='step-item px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
+  document.getElementById('step2').className='step-item px-3 py-1 rounded-full text-xs font-semibold border bg-amber-400/10 border-amber-400/30 text-amber-400';
 }
-async function startUpload(){
-  const title=document.getElementById('title').value.trim();
-  const videoFile=document.getElementById('vidInput').files[0];
-  if(!title){alert('Judul video wajib diisi!');return}
-  if(!videoFile){alert('Pilih file video terlebih dahulu!');return}
+function onThumbChange(input){
+  const file=input.files[0];
+  if(!file)return;
+  const wrap=document.getElementById('thumbPreviewWrap');
+  const img=document.getElementById('thumbPreview');
+  img.src=URL.createObjectURL(file);
+  wrap.classList.remove('hidden');
+}
+document.getElementById('uploadForm').addEventListener('submit',function(e){
   const btn=document.getElementById('submitBtn');
-  btn.disabled=true;
-  document.getElementById('progressWrap').classList.add('show');
-  setStep(2);
-  try{
-    setProgress(0,'Mengupload video...');
-    const vr=await uploadToCloudinary(videoFile,'video',pct=>setProgress(pct*.8,`Mengupload video... ${Math.round(pct)}%`));
-    let thumbnailUrl=null;
-    const thumbFile=document.getElementById('thumbInput').files[0];
-    if(thumbFile){setProgress(82,'Mengupload thumbnail...');const tr=await uploadToCloudinary(thumbFile,'image',()=>{});thumbnailUrl=tr.secure_url}
-    else{thumbnailUrl=`https://res.cloudinary.com/${CLOUD_NAME}/video/upload/so_0/${vr.public_id}.jpg`}
-    setProgress(92,'Menyimpan...');
-    const resp=await fetch('/api/save-video',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      title,description:document.getElementById('description').value.trim(),
-      uploader_name:document.getElementById('uploader_name').value.trim()||'Anonymous',
-      category:document.getElementById('category').value,
-      tags:document.getElementById('tags').value.trim(),
-      video_url:vr.secure_url,thumbnail_url:thumbnailUrl,
-      cloudinary_public_id:vr.public_id,duration:Math.round(vr.duration||0)
-    })});
-    const d=await resp.json();
-    if(!d.success)throw new Error(d.error||'Gagal menyimpan');
-    setProgress(100,'Selesai!');setStep(3);
-    document.getElementById('mainForm').style.display='none';
-    document.getElementById('successBox').classList.add('show');
-    document.getElementById('successMsg').textContent='Video sedang menunggu review admin sebelum tampil di beranda.';
-  }catch(err){btn.disabled=false;setStep(1);document.getElementById('progressWrap').classList.remove('show');alert('Error: '+err.message)}
-}
+  btn.disabled=true;btn.innerHTML='<i class="fa fa-spinner fa-spin mr-2"></i> Uploading...';
+  document.getElementById('progressWrap').classList.remove('hidden');
+  document.getElementById('step3').className='step-item px-3 py-1 rounded-full text-xs font-semibold border bg-amber-400/10 border-amber-400/30 text-amber-400';
+  // Simulate progress
+  let pct=0;
+  const iv=setInterval(()=>{
+    pct=Math.min(pct+Math.random()*8,90);
+    document.getElementById('progressFill').style.width=pct+'%';
+    document.getElementById('progressPct').textContent=Math.round(pct)+'%';
+    if(pct>=90)clearInterval(iv);
+  },300);
+});
 </script>
 {% endblock %}
